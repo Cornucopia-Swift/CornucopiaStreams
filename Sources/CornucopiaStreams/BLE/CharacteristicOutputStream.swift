@@ -39,7 +39,7 @@ public class CharacteristicOutputStream: OutputStream {
         var maxWriteForCharacteristic = self.characteristic.service.peripheral.maximumWriteValueLength(for: writeType)
         //NOTE: The return value of `maxWriteForCharacteristic(for: .writeWithResponse)` seems to be a bland, outright, LIE!
         //      A BLE sniff shows that although iOS and my peripheral negotiate an MTU of 247:
-        //      peripheral.maximumWriteValueLength(for: .withoutResponse) = 512 <- WRONG
+        //      peripheral.maximumWriteValueLength(for: .withResponse) = 512 <- WRONG
         //      peripheral.maximumWriteValueLength(for: .withoutResponse) = 244 <- CORRECT
         //      -- Reported on 2021.03.22 as FB9050731
         maxWriteForCharacteristic = min(
