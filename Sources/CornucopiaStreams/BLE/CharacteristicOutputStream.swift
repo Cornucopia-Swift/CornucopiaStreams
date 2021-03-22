@@ -31,9 +31,21 @@ public class CharacteristicOutputStream: OutputStream {
     public override func write(_ buffer: UnsafePointer<UInt8>, maxLength len: Int) -> Int {
         guard self.status == .open else { return -1 }
 
-        //let writeType: CBCharacteristicWriteType = self.characteristic.properties.contains(.writeWithoutResponse) ? .withoutResponse : .withResponse
+        //NOTE: We always prefer `.withResponse`, since the diagnostics for BLE WRITE_REQUEST are better.
         let writeType: CBCharacteristicWriteType = self.characteristic.properties.contains(.write) ? .withResponse : .withoutResponse
-        let maxWriteForCharacteristic = self.characteristic.service.peripheral.maximumWriteValueLength(for: writeType)
+        if writeType != .withResponse {
+            print("Caution: Using write type WITHOUT response. This is NOT recommended.")
+        }
+        var maxWriteForCharacteristic = self.characteristic.service.peripheral.maximumWriteValueLength(for: writeType)
+        //NOTE: The return value of `maxWriteForCharacteristic(for: .writeWithResponse)` seems to be a bland, outright, LIE!
+        //      A BLE sniff shows that although iOS and my peripheral negotiate an MTU of 247:
+        //      peripheral.maximumWriteValueLength(for: .withoutResponse) = 512 <- WRONG
+        //      peripheral.maximumWriteValueLength(for: .withoutResponse) = 244 <- CORRECT
+        //      -- Reported on 2021.03.22 as FB9050731
+        maxWriteForCharacteristic = min(
+            self.characteristic.service.peripheral.maximumWriteValueLength(for: .withResponse),
+            self.characteristic.service.peripheral.maximumWriteValueLength(for: .withoutResponse)
+            )
         let bytesToWrite = min(maxWriteForCharacteristic, len)
         let data = Data(bytes: buffer, count: bytesToWrite)
         //FIXME: If we're writing without response, add a check here whether we can actually send before attempting to write

@@ -2,6 +2,9 @@
 //  Cornucopia – (C) Dr. Lauer Information Technology
 //
 import CoreBluetooth
+import os.log
+
+fileprivate let log = OSLog(subsystem: "de.vanille.Cornucopia.Streams", category: "CharacteristicsStreamProvider")
 
 public class CharacteristicsStreamProvider: NSObject, CBPeripheralDelegate {
 
@@ -38,12 +41,20 @@ public class CharacteristicsStreamProvider: NSObject, CBPeripheralDelegate {
     //MARK: - <CBPeripheralDelegate>
 
     public func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
+        guard error == nil else {
+            os_log("Could not writeValueForCharacteristic: %@", log: log, type: .error, error! as CVarArg)
+            return
+        }
         print("didWriteValue for \(characteristic)")
         guard characteristic == self.outputStream.characteristic else { fatalError() }
         self.outputStream.bleWriteCompleted()
     }
 
     public func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        guard error == nil else {
+            os_log("Could not updateValueForCharacteristic: %@", log: log, type: .error, error! as CVarArg)
+            return
+        }
         print("didUpdateValue for \(characteristic)")
         guard characteristic == self.inputStream.characteristic else { fatalError() }
         self.inputStream.bleReadCompleted()
