@@ -13,6 +13,7 @@ public extension Stream {
         static let forbiddenCharsetCBUUID6 = CharacterSet(charactersIn: "0123456789ABCDEF-").inverted
 
         var uuid: CBUUID!
+        weak var peripheral: CBPeripheral?
 
         public override func setup() {
 
@@ -40,6 +41,7 @@ public extension Stream {
             BLEAccessoryManager.shared.findService(with: self.uuid) { result in
                 switch result {
                     case .success(let streams):
+                        self.meta.name = streams.peripheral.name ?? ""
                         self.succeedWith(istream: streams.inputStream, ostream: streams.outputStream)
                     case .failure(let error):
                         self.failWith(error: error)

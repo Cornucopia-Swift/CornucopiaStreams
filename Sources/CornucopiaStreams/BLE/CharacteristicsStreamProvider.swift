@@ -26,8 +26,6 @@ public class CharacteristicsStreamProvider: NSObject, CBPeripheralDelegate {
         self.inputStream = CharacteristicInputStream(with: input)
         self.outputStream = CharacteristicOutputStream(with: output)
 
-        self.inputStream.CC_name = readCharacteristic?.service.peripheral.name
-
         super.init()
 
         peripheral.delegate = self

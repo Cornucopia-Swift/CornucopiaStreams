@@ -50,10 +50,12 @@ public extension Stream {
 
         private func startSession(_ session: EASession, inputStream: InputStream, outputStream: OutputStream) {
             self.session = session
-            inputStream.CC_name = session.accessory?.name
-            inputStream.CC_manufacturer = session.accessory?.manufacturer
-            inputStream.CC_model = session.accessory?.modelNumber
-            inputStream.CC_serialNumber = session.accessory?.serialNumber
+            guard let accessory = self.session?.accessory else { fatalError("InternalError: No EASession or EAAccessory?" ) }
+            self.meta.name = accessory.name
+            self.meta.manufacturer = accessory.manufacturer
+            self.meta.model = accessory.modelNumber
+            self.meta.serialNumber = "\(accessory.serialNumber) \(accessory.hardwareRevision)"
+            self.meta.version = accessory.firmwareRevision
             self.succeedWith(istream: inputStream, ostream: outputStream)
         }
     }

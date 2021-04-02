@@ -66,11 +66,13 @@ public extension Stream {
     class Connection {
 
         let url: URL
+        let meta: Meta
         private let then: PairResultHandler
         fileprivate var timer: DispatchSourceTimer?
 
         public init(url: URL, then: @escaping(PairResultHandler)) {
             self.url = url
+            self.meta = Meta(url: url)
             self.then = then
         }
         public func setup() {
@@ -87,7 +89,8 @@ public extension Stream {
         }
         public final func succeedWith(istream: InputStream, ostream: OutputStream) {
             self.timer?.cancel(); self.timer = nil
-            istream.CC_url = self.url
+            istream.CC_storeMeta(self.meta)
+            ostream.CC_storeMeta(self.meta)
             Stream.CC_pendingConnections.removeValue(forKey: self.url)
             Stream.CC_activeConnections[self.url] = self
             let result = PairResult.success((istream, ostream))
