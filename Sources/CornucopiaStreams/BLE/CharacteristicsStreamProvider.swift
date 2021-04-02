@@ -1,6 +1,7 @@
 //
 //  Cornucopia – (C) Dr. Lauer Information Technology
 //
+#if canImport(CoreBluetooth)
 import CoreBluetooth
 import os.log
 
@@ -64,3 +65,5 @@ public class CharacteristicsStreamProvider: NSObject, CBPeripheralDelegate {
         self.outputStream.bleWriteCompleted()
     }
 }
+#endif
+

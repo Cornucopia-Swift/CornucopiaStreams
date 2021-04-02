@@ -1,6 +1,7 @@
 //
 //  Cornucopia – (C) Dr. Lauer Information Technology
 //
+#if canImport(ExternalAccessory)
 import ExternalAccessory
 
 public extension Stream {
@@ -60,3 +61,4 @@ public extension Stream {
         }
     }
 }
+#endif

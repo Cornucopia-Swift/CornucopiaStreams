@@ -1,8 +1,8 @@
 //
 //  Cornucopia – (C) Dr. Lauer Information Technology
 //
+#if canImport(CoreBluetooth)
 import Foundation
-
 import CoreBluetooth
 
 public extension Stream {
@@ -55,3 +55,4 @@ public extension Stream {
 
     }
 }
+#endif

@@ -1,6 +1,7 @@
 //
 //  Cornucopia – (C) Dr. Lauer Information Technology
 //
+#if canImport(CoreBluetooth)
 import CoreBluetooth
 
 public class CharacteristicInputStream: InputStream {
@@ -66,3 +67,4 @@ internal extension CharacteristicInputStream {
         self.delegate?.stream?(self, handle: .endEncountered)
     }
 }
+#endif

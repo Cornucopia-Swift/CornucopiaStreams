@@ -1,6 +1,7 @@
 //
 //  Cornucopia – (C) Dr. Lauer Information Technology
 //
+#if canImport(ExternalAccessory)
 import ExternalAccessory.EASession
 
 public enum AccessoryError: Error {
@@ -32,3 +33,4 @@ public extension EASession {
     }
 
 }
+#endif

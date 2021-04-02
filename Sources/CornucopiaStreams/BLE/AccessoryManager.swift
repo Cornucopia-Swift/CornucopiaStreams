@@ -1,6 +1,7 @@
 //
 //  Cornucopia – (C) Dr. Lauer Information Technology
 //
+#if canImport(CoreBluetooth)
 import CoreBluetooth
 
 public class BLEAccessoryManager: NSObject {
@@ -119,3 +120,4 @@ extension BLEAccessoryManager: CBPeripheralDelegate {
         self.activeSessions.removeValue(forKey: peripheral.identifier)
     }
 }
+#endif
