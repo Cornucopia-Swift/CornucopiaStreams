@@ -108,10 +108,17 @@ internal extension Stream {
     static var CC_pendingConnections: [URL: Connection] = [:]
     static var CC_activeConnections: [URL: Connection] = [:]
 
-    static var connectionProviders: [String: Stream.ConnectionProvider] = [
-        "tty": { TTYConnection(url: $0, then: $1) },
-        "tcp": { TCPConnection(url: $0, then: $1) },
-        "ea": { EAConnection(url: $0, then: $1) },
-        "ble": { BLEConnection(url: $0, then: $1) },
-    ]
+    static var connectionProviders: [String: Stream.ConnectionProvider] = {
+        let providers: [String: Stream.ConnectionProvider] = [
+            "tty": { TTYConnection(url: $0, then: $1) },
+            "tcp": { TCPConnection(url: $0, then: $1) },
+        ]
+#if canImport(ExternalAccessory)
+        providers["ea"] = { EAConnection(url: $0, then: $1) }
+#endif
+#if canImport(CoreBluetooth)
+        providers["ble"] = { BLEConnection(url: $0, then: $1) }
+#endif
+        return providers
+    }()
 }

@@ -16,9 +16,7 @@ public extension Stream {
                 self.failWith(error: .invalidParameters)
                 return
             }
-            var inputStream: InputStream?
-            var outputStream: OutputStream?
-            Stream.getStreamsToHost(withName: hostname, port: port, inputStream: &inputStream, outputStream: &outputStream)
+            let (inputStream, outputStream) = Stream.CC_getStreamsToHost(with: hostname, port: port)
             guard let istream = inputStream, let ostream = outputStream else {
                 self.failWith(error: .notFound)
                 return
