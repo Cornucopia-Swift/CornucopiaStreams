@@ -109,7 +109,7 @@ internal extension Stream {
     static var CC_activeConnections: [URL: Connection] = [:]
 
     static var connectionProviders: [String: Stream.ConnectionProvider] = {
-        let providers: [String: Stream.ConnectionProvider] = [
+        var providers: [String: Stream.ConnectionProvider] = [
             "tty": { TTYConnection(url: $0, then: $1) },
             "tcp": { TCPConnection(url: $0, then: $1) },
         ]
