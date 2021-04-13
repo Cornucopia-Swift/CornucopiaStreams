@@ -35,7 +35,6 @@ public extension Stream {
                 let t = DispatchSource.makeTimerSource(flags: DispatchSource.TimerFlags(), queue: DispatchQueue.main)
                 t.schedule(deadline: .now() + timeout)
                 t.setEventHandler { [weak connection] in
-                    Stream.CC_pendingConnections.removeValue(forKey: url)
                     connection?.cancel()
                     connection?.failWith(error: .timeout)
                 }
