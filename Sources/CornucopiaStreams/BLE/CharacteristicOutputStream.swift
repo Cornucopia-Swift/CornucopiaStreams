@@ -38,13 +38,13 @@ public class CharacteristicOutputStream: OutputStream {
             print("Caution: Using write type WITHOUT response. This is NOT recommended.")
         }
         var maxWriteForCharacteristic = self.characteristic.service.peripheral.maximumWriteValueLength(for: writeType)
-        print("MTU reported as \(maxWriteForCharacteristic)")
-        //NOTE: The return value of `maxWriteForCharacteristic(for: .writeWithResponse)` seems to be a bland, outright, LIE!
-        //      A BLE sniff shows that although iOS and my peripheral negotiate an MTU of 247:
-        //      peripheral.maximumWriteValueLength(for: .withResponse) = 512 <- WRONG
-        //      peripheral.maximumWriteValueLength(for: .withoutResponse) = 244 <- CORRECT
-        //      -- Reported on 2021.03.22 as FB9050731
-        #if false
+        //NOTE: Some BLE 5.0 devices (yes, I'm looking to you, OBDLINK CX) calim to support Queued Writes (see BLE5.0 | Vol 3, Part F,  Section 3.4.6),
+        //      which makes CoreBluetooth assume that we can use a pretty high MTU, such as 512. In this case the return values for
+        //      peripheral.maximumWriteValueLength(for: .withResponse) ["BLE 5.0 MTU"] and
+        //      peripheral.maximumWriteValueLength(for: .withoutResponse) ["BLE 4.x MTU"] differ. In reality though, they don't support
+        //      queued writes and thus all attempts to write more than the BLE 4.x MTU leads to lost data.
+        //      To be on the safe side, we _always_ have to take the lower value of both APIs. :-(
+        #if !BLE_5_DEVICES_BEHAVE_CORRECTLY
         maxWriteForCharacteristic = min(
             self.characteristic.service.peripheral.maximumWriteValueLength(for: .withResponse),
             self.characteristic.service.peripheral.maximumWriteValueLength(for: .withoutResponse)
@@ -52,7 +52,7 @@ public class CharacteristicOutputStream: OutputStream {
         #endif
         let bytesToWrite = min(maxWriteForCharacteristic, len)
         let data = Data(bytes: buffer, count: bytesToWrite)
-        //FIXME: If we're writing without response, add a check here whether we can actually send before attempting to write
+        //FIXME: If we're writing without response, we could add a check here to see whether we can actually send before attempting to write
         self.characteristic.service.peripheral.writeValue(data, for: self.characteristic, type: writeType)
         return bytesToWrite
     }
