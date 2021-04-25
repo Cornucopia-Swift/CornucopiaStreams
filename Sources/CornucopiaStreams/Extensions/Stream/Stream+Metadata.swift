@@ -43,6 +43,6 @@ public extension Stream {
         /// The signal quality.
         public internal(set) var rssi: Double = 0.0
 
-        public init(url: URL) { self.url = url }
+        internal init(url: URL) { self.url = url }
     }
 }

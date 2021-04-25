@@ -7,6 +7,7 @@ import CoreBluetooth
 
 public extension Stream {
 
+    /// Handling a connection to a Bluetooth Low Energy peripheral.
     class BLEConnection: Connection {
 
         static let forbiddenCharsetCBUUID4 = CharacterSet(charactersIn: "0123456789ABCDEF").inverted

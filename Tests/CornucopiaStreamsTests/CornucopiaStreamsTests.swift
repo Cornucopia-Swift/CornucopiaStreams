@@ -1,6 +1,7 @@
 import XCTest
 @testable import CornucopiaStreams
 
+//FIXME: We need more tests, but end-to-end testing streams to external accessories and BLE devices is going to be non-trivial.
 final class CornucopiaStreamsTests: XCTestCase, StreamDelegate {
 
     func testTCP() {

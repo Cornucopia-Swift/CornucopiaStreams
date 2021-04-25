@@ -3,7 +3,9 @@
 //
 #if canImport(CoreBluetooth)
 import CoreBluetooth
+import os.log
 
+/// An `OutputStream` bridging to a BLE characteristic.
 public class CharacteristicOutputStream: OutputStream {
 
     public let characteristic: CBCharacteristic
@@ -15,13 +17,14 @@ public class CharacteristicOutputStream: OutputStream {
 
     private var status: Stream.Status = .notOpen
     private var delega: StreamDelegate? = nil
+    private var didOutputWriteTypeWarning: Bool = false
 
     init(with characteristic: CBCharacteristic) {
-
         self.characteristic = characteristic
         super.init(toMemory: ())
     }
 
+    /// Open the stream.
     public override func open() {
         self.status = .opening
         self.status = .open
@@ -29,13 +32,15 @@ public class CharacteristicOutputStream: OutputStream {
         self.delegate?.stream?(self, handle: .hasSpaceAvailable)
     }
 
+    /// Write to the stream.
     public override func write(_ buffer: UnsafePointer<UInt8>, maxLength len: Int) -> Int {
         guard self.status == .open else { return -1 }
 
         //NOTE: We always prefer `.withResponse`, since the diagnostics for BLE WRITE_REQUEST are better.
         let writeType: CBCharacteristicWriteType = self.characteristic.properties.contains(.write) ? .withResponse : .withoutResponse
-        if writeType != .withResponse {
-            print("Caution: Using write type WITHOUT response. This is NOT recommended.")
+        if writeType != .withResponse && !didOutputWriteTypeWarning {
+            os_log("Using BLE write type WITHOUT response (not recommended)", log: OSLog.default, type: .info)
+            didOutputWriteTypeWarning = true
         }
         var maxWriteForCharacteristic = self.characteristic.service.peripheral.maximumWriteValueLength(for: writeType)
         //NOTE: Some BLE 5.0 devices (yes, I'm looking to you, OBDLINK CX) calim to support Queued Writes (see BLE5.0 | Vol 3, Part F,  Section 3.4.6),
@@ -57,6 +62,7 @@ public class CharacteristicOutputStream: OutputStream {
         return bytesToWrite
     }
 
+    /// Close the stream.
     public override func close() {
         self.status = .closed
         self.delegate?.stream?(self, handle: .endEncountered)
@@ -78,4 +84,3 @@ internal extension CharacteristicOutputStream {
     }
 }
 #endif
-

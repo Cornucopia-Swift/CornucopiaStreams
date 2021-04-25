@@ -5,6 +5,7 @@ import Foundation
 
 public extension Stream {
 
+    /// Handling a TTY connection.
     class TTYConnection: Connection {
 
         public override func setup() {

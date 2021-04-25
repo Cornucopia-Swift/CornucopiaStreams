@@ -5,6 +5,7 @@ import Foundation
 
 public extension Stream {
 
+    /// Handling a TCP connection.
     class TCPConnection: Connection {
 
         public override func setup() {

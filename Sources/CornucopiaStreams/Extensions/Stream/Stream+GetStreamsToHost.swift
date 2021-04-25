@@ -6,6 +6,7 @@ import CoreFoundation
 
 public extension Stream {
 
+    /// Create an input/output stream pair bound to the specified TCP host.
     class func CC_getStreamsToHost(with name: String, port: Int) -> (InputStream?, OutputStream?) {
 
         #if canImport(FoundationNetworking)

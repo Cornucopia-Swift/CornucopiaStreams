@@ -5,7 +5,7 @@ import Foundation
 
 public extension Stream {
 
-    /// Possible stream connection errors
+    /// Stream connection errors.
     enum PairError: Error {
         case invalidParameters
         case notFound

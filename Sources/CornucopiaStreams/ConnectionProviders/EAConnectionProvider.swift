@@ -6,6 +6,7 @@ import ExternalAccessory
 
 public extension Stream {
 
+    /// Handling a connection to a MFI-compliant External Accessory device.
     class EAConnection: Connection {
 
         var session: EASession?

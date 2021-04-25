@@ -7,6 +7,7 @@ import os.log
 
 fileprivate let log = OSLog(subsystem: "de.vanille.Cornucopia.Streams", category: "CharacteristicsStreamProvider")
 
+/// Managing the input/output stream pair for a `CBPeripheral`.
 public class CharacteristicsStreamProvider: NSObject, CBPeripheralDelegate {
 
     let peripheral: CBPeripheral
@@ -14,6 +15,7 @@ public class CharacteristicsStreamProvider: NSObject, CBPeripheralDelegate {
     public let inputStream: CharacteristicInputStream!
     public let outputStream: CharacteristicOutputStream!
 
+    /// Create the stream pair for the first applicable `CBCharacteristic` in the specified `CBService`.
     public init(forService service: CBService) {
         self.service = service
         self.peripheral = service.peripheral
@@ -44,7 +46,9 @@ public class CharacteristicsStreamProvider: NSObject, CBPeripheralDelegate {
             os_log("Could not writeValueForCharacteristic: %@", log: log, type: .error, error! as CVarArg)
             return
         }
-        print("didWriteValue for \(characteristic)")
+        #if TRACE
+        os_log("didWriteValueForCharacteristic: %@", log: log, type: .debug, characteristic)
+        #endif
         guard characteristic == self.outputStream.characteristic else { fatalError() }
         self.outputStream.bleWriteCompleted()
     }
@@ -54,16 +58,19 @@ public class CharacteristicsStreamProvider: NSObject, CBPeripheralDelegate {
             os_log("Could not updateValueForCharacteristic: %@", log: log, type: .error, error! as CVarArg)
             return
         }
-        print("didUpdateValue for \(characteristic)")
+        #if TRACE
+        os_log("didUpdateValueForCharacteristic: %@", log: log, type: .debug, characteristic)
+        #endif
         guard characteristic == self.inputStream.characteristic else { fatalError() }
         self.inputStream.bleReadCompleted()
     }
 
     public func peripheralIsReady(toSendWriteWithoutResponse peripheral: CBPeripheral) {
-        print("didWriteWithoutResponse for \(peripheral)")
+        #if TRACE
+        os_log("periperalIsReadyToSendWriteWithoutResponse: %@", log: log, type: .debug, peripheral)
+        #endif
         guard peripheral == self.peripheral else { fatalError() }
         self.outputStream.bleWriteCompleted()
     }
 }
 #endif
-
