@@ -3,6 +3,9 @@
 //
 #if canImport(CoreBluetooth)
 import CoreBluetooth
+import os.log
+
+fileprivate var log = OSLog(subsystem: "dev.cornucopia.CornucopiaStreams", category: "BLEAccessoryManager")
 
 public class BLEAccessoryManager: NSObject {
 
@@ -106,7 +109,10 @@ extension BLEAccessoryManager: CBPeripheralDelegate {
         let streamProvider = CharacteristicsStreamProvider(forService: service)
         self.activeSessions[peripheral.identifier] = streamProvider
 
-        guard let handler = self.pendingConnections.removeValue(forKey: service.uuid) else { fatalError() }
+        guard let handler = self.pendingConnections.removeValue(forKey: service.uuid) else {
+            os_log("Did discover characteristics for service %@, but there is no pending connection for this UUID anymore.", service.uuid.description)
+            return
+        }
         let result = FindServiceResult.success(streamProvider)
         handler(result)
 
