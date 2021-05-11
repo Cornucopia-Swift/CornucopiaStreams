@@ -3,19 +3,28 @@
 //
 import Foundation
 import CoreFoundation
+#if canImport(FoundationNetworking)
+import CSocketHelper
+#endif
 
 public extension Stream {
 
     /// Create an input/output stream pair bound to the specified TCP host.
     class func CC_getStreamsToHost(with name: String, port: Int) -> (InputStream?, OutputStream?) {
 
-        #if canImport(FoundationNetworking)
-        fatalError("I'm sorry, this is not yet implemented on Linux")
-        #else
         var inputStream: InputStream?
         var outputStream: OutputStream?
+        #if canImport(FoundationNetworking)
+        let fileDescriptor = csocket_connect(name.cString(using: .utf8), Int32(port), 1000)
+        if fileDescriptor >= 0 {
+            let fih = FileHandle(fileDescriptor: fileDescriptor, closeOnDealloc: true)
+            let foh = FileHandle(fileDescriptor: fileDescriptor, closeOnDealloc: false)
+            inputStream = FileHandleInputStream(fileHandle: fih)
+            outputStream = FileHandleOutputStream(fileHandle: foh)
+        }
+        #else
         Self.getStreamsToHost(withName: name, port: port, inputStream: &inputStream, outputStream: &outputStream)
-        return (inputStream, outputStream)
         #endif
+        return (inputStream, outputStream)
     }
 }
