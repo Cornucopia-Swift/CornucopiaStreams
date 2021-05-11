@@ -7,18 +7,17 @@ _:shell: The "horn of plenty" – a symbol of abundance._
 
 ### Introduction
 
-This library provides a convenient and extensible way to get an I/O stream pair to an URL.
+This library provides a convenient and extensible way to get an I/O stream pair to an URL – supporting various schemes, such as TCP, TTY, BLE, and EA.
 
 `Foundation` comes with `getStreamsToHost(withName:port:inputStream:outputStream:)`,
 which is clumsy to use and limited to TCP. `CornucopiaStreams` adds support for communicating with TTYs, external accessories
 (using the `ExternalAccessory` framework), and Bluetooth Low Energy (BLE) devices (using the `CoreBluetooth` framework).
 
-_Unfortunately, Linux support is not complete yet. Apart from the missing `ExternalAccessory` and `CoreBluetooth` infrastructure
-(which, at least in the BLE case, could be substituted), the `Stream` class is missing the convenience accessor `Stream.getStreamsToHost`_.
+On non-Apple-platforms, only TCP and TTY are supported, as both `ExternalAccessory` and `CoreBluetooth` are private Apple frameworks – it might be interesting to evaluate [BluetoothLinux](https://github.com/PureSwift/BluetoothLinux).
 
 ### Usage
 
-Open a connection to a tty:
+Open a connection to a TTY:
 
 ```swift
 import CornucopiaStreams
@@ -30,7 +29,7 @@ Stream.CC_getStreamPair(to: url) { result in
 }
 ```
 
-Open a connection to a tcp host:
+Open a connection to a TCP host:
 
 ```swift
 import CornucopiaStreams
@@ -66,7 +65,7 @@ Stream.CC_getStreamPair(to: url) { result in
 }
 ```
 
-Some of the streams provide metadata, e.g., the `name` for BLE devices, which you can access via the Streams `CC_meta` property.
+Some of the streams provide metadata, e.g., the `name` for BLE devices, which you can access via the `CC_meta` property.
 
 ### Contributions
 
