@@ -4,10 +4,10 @@ import PackageDescription
 let package = Package(
     name: "CornucopiaStreams",
     platforms: [
-        .macOS(.v10_13),
-        .iOS(.v10),
-        .tvOS(.v10),
-        .watchOS(.v3),
+        .macOS("10.15.4"),
+        .iOS("13.4"),
+        .tvOS("13.4"),
+        .watchOS("6"),
     ],
     products: [
         .library(

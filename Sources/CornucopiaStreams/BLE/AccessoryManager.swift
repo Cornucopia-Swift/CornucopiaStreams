@@ -110,7 +110,7 @@ extension BLEAccessoryManager: CBPeripheralDelegate {
         self.activeSessions[peripheral.identifier] = streamProvider
 
         guard let handler = self.pendingConnections.removeValue(forKey: service.uuid) else {
-            os_log("Did discover characteristics for service %@, but there is no pending connection for this UUID anymore.", service.uuid.description)
+            os_log("Did discover characteristics for service %@, but there is no pending connection for this UUID anymore.", log: log, type: .info, service.uuid.description)
             return
         }
         let result = FindServiceResult.success(streamProvider)

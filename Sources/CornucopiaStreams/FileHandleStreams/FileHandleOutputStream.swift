@@ -39,7 +39,11 @@ class FileHandleOutputStream: OutputStream {
     override func open() {
         guard self._streamStatus != .open else { return }
         self._streamStatus = .open
-        self.delegate?.stream(self, handle: .openCompleted)
+        #if os(Linux)
+        _delegate?.stream(self, handle: .openCompleted)
+        #else
+        _delegate?.stream?(self, handle: .openCompleted)
+        #endif
     }
 
     override var hasSpaceAvailable: Bool { true }
