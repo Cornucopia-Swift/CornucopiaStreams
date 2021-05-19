@@ -25,9 +25,7 @@ public class CharacteristicInputStream: InputStream {
     public override func open() {
         self.status = .opening
         self.characteristic.service.peripheral.setNotifyValue(true, for: self.characteristic)
-        //self.characteristic.service.peripheral.readValue(for: self.characteristic)
-        self.status = .open
-        self.delegate?.stream?(self, handle: .openCompleted)
+        //NOTE: Open is asynchronous, the control flow will continue (eventually) in `bleSubscriptionCompleted`
     }
 
     public override func close() {
@@ -56,6 +54,19 @@ public class CharacteristicInputStream: InputStream {
 
 internal extension CharacteristicInputStream {
 
+    func bleSubscriptionCompleted(error: Error?) {
+        guard error == nil else {
+            self.status = .error
+            self.delegate?.stream?(self, handle: .errorOccurred)
+            return
+        }
+        self.status = .open
+        self.delegate?.stream?(self, handle: .openCompleted)
+        //FIXME: Should we try to read to find out whether there are already bytes lurking in the lowlevel buffer?
+        //self.characteristic.service.peripheral.readValue(for: self.characteristic)
+    }
+
+    //FIXME: Handle read error here?
     func bleReadCompleted() {
         guard let data = self.characteristic.value else { return }
         self.incoming.append(data)

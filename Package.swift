@@ -18,7 +18,10 @@ let package = Package(
     ],
     targets: [
         .target(name: "CSocketHelper"),
-        .target(name: "CornucopiaStreams", dependencies: ["CSocketHelper"]),
+        .target(name: "CornucopiaStreams",
+                dependencies: ["CSocketHelper"]
+                //,swiftSettings: [.define("TRACE")]
+        ),
         .testTarget(name: "CornucopiaStreamsTests", dependencies: ["CornucopiaStreams"]),
     ]
 )

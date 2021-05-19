@@ -41,7 +41,20 @@ public class CharacteristicsStreamProvider: NSObject, CBPeripheralDelegate {
 
     //MARK: - <CBPeripheralDelegate>
 
+    public func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
+        guard characteristic == self.inputStream.characteristic else { fatalError() }
+        defer { self.inputStream.bleSubscriptionCompleted(error: error) }
+        guard error == nil else {
+            os_log("Could not updateNotificationStateForCharacteristic: %@", log: log, type: .error, error! as CVarArg)
+            return
+        }
+        #if TRACE
+        os_log("didUpdateNotificationStateForCharacteristic: %@", log: log, type: .debug, characteristic)
+        #endif
+    }
+
     public func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
+        guard characteristic == self.outputStream.characteristic else { fatalError() }
         guard error == nil else {
             os_log("Could not writeValueForCharacteristic: %@", log: log, type: .error, error! as CVarArg)
             return
@@ -49,11 +62,11 @@ public class CharacteristicsStreamProvider: NSObject, CBPeripheralDelegate {
         #if TRACE
         os_log("didWriteValueForCharacteristic: %@", log: log, type: .debug, characteristic)
         #endif
-        guard characteristic == self.outputStream.characteristic else { fatalError() }
         self.outputStream.bleWriteCompleted()
     }
 
     public func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        guard characteristic == self.inputStream.characteristic else { fatalError() }
         guard error == nil else {
             os_log("Could not updateValueForCharacteristic: %@", log: log, type: .error, error! as CVarArg)
             return
@@ -61,15 +74,14 @@ public class CharacteristicsStreamProvider: NSObject, CBPeripheralDelegate {
         #if TRACE
         os_log("didUpdateValueForCharacteristic: %@", log: log, type: .debug, characteristic)
         #endif
-        guard characteristic == self.inputStream.characteristic else { fatalError() }
         self.inputStream.bleReadCompleted()
     }
 
     public func peripheralIsReady(toSendWriteWithoutResponse peripheral: CBPeripheral) {
+        guard peripheral == self.peripheral else { fatalError() }
         #if TRACE
         os_log("periperalIsReadyToSendWriteWithoutResponse: %@", log: log, type: .debug, peripheral)
         #endif
-        guard peripheral == self.peripheral else { fatalError() }
         self.outputStream.bleWriteCompleted()
     }
 }
