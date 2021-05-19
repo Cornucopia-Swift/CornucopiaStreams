@@ -18,7 +18,7 @@ public extension Stream {
 
         public override func setup() {
 
-            guard let service = self.url.host else {
+            guard let service = self.url.host?.uppercased() else {
                 self.failWith(error: .invalidParameters)
                 return
             }
