@@ -67,6 +67,7 @@ public class CharacteristicsStreamProvider: NSObject, CBPeripheralDelegate {
 
     public func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         guard characteristic == self.inputStream.characteristic else { fatalError() }
+        defer { self.inputStream.bleReadCompleted(error: error) }
         guard error == nil else {
             os_log("Could not updateValueForCharacteristic: %@", log: log, type: .error, error! as CVarArg)
             return
@@ -74,7 +75,6 @@ public class CharacteristicsStreamProvider: NSObject, CBPeripheralDelegate {
         #if TRACE
         os_log("didUpdateValueForCharacteristic: %@", log: log, type: .debug, characteristic)
         #endif
-        self.inputStream.bleReadCompleted()
     }
 
     public func peripheralIsReady(toSendWriteWithoutResponse peripheral: CBPeripheral) {

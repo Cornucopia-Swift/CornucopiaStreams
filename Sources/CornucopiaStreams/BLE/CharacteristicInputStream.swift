@@ -66,8 +66,11 @@ internal extension CharacteristicInputStream {
         //self.characteristic.service.peripheral.readValue(for: self.characteristic)
     }
 
-    //FIXME: Handle read error here?
-    func bleReadCompleted() {
+    func bleReadCompleted(error: Error?) {
+        guard error == nil else {
+            self.delegate?.stream?(self, handle: .errorOccurred)
+            return
+        }
         guard let data = self.characteristic.value else { return }
         self.incoming.append(data)
         self.delegate?.stream?(self, handle: .hasBytesAvailable)
