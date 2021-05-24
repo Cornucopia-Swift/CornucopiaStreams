@@ -20,6 +20,11 @@ public extension Stream {
     typealias PairResultHandler = (PairResult) -> ()
     typealias ConnectionProvider = (URL, @escaping(Stream.PairResultHandler)) -> Stream.Connection
 
+    /// Returns the supported schemes on this platform.
+    static func CC_supportedSchemes() -> Set<String> {
+        Set(self.connectionProviders.keys)
+    }
+
     /// Computes a pair of I/O streams to the specified `url` and delivers the result via the closure.
     static func CC_getStreamPair(to url: URL, timeout: TimeInterval = 0.0, then: @escaping(PairResultHandler)) {
 
