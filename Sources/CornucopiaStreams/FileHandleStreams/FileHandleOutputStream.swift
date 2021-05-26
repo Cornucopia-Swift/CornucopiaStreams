@@ -39,11 +39,8 @@ class FileHandleOutputStream: OutputStream {
     override func open() {
         guard self._streamStatus != .open else { return }
         self._streamStatus = .open
-        #if os(Linux)
-        _delegate?.stream(self, handle: .openCompleted)
-        #else
-        _delegate?.stream?(self, handle: .openCompleted)
-        #endif
+        self.reportDelegateEvent(.openCompleted)
+        self.reportDelegateEvent(.hasSpaceAvailable)
     }
 
     override var hasSpaceAvailable: Bool { true }
@@ -52,6 +49,7 @@ class FileHandleOutputStream: OutputStream {
 
         let data = Data(bytes: buffer, count: len)
         self.fileHandle.write(data)
+        self.reportDelegateEvent(.hasSpaceAvailable)
         return len
     }
 
@@ -65,4 +63,17 @@ class FileHandleOutputStream: OutputStream {
     #endif
     override func schedule(in aRunLoop: RunLoop, forMode mode: RunLoop.Mode) { }
     override func remove(from aRunLoop: RunLoop, forMode mode: RunLoop.Mode) { }
+}
+
+private extension FileHandleOutputStream {
+
+    func reportDelegateEvent(_ event: Stream.Event) {
+        DispatchQueue.main.async {
+            #if os(Linux)
+            self._delegate?.stream(self, handle: event)
+            #else
+            self._delegate?.stream?(self, handle: event)
+            #endif
+        }
+    }
 }
