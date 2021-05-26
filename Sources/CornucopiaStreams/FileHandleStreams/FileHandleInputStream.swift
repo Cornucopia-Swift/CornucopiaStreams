@@ -43,7 +43,8 @@ class FileHandleInputStream: InputStream {
             self._delegate?.stream?(self, handle: .hasBytesAvailable)
             #endif
         }
-        self.fileHandle.waitForDataInBackgroundAndNotify()
+        // Must be called from a thread that has an active runloop, see https://developer.apple.com/documentation/foundation/nsfilehandle/1409270-waitfordatainbackgroundandnotify
+        DispatchQueue.main.async { self.fileHandle.waitForDataInBackgroundAndNotify() }
         self._streamStatus = .open
         #if os(Linux)
         self.delegate?.stream(self, handle: .openCompleted)
