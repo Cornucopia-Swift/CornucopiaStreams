@@ -10,7 +10,7 @@ fileprivate let log = OSLog(subsystem: "de.vanille.Cornucopia.Streams", category
 /// Managing the input/output stream pair for a `CBPeripheral`.
 public class CharacteristicsStreamProvider: NSObject, CBPeripheralDelegate {
 
-    let peripheral: CBPeripheral
+    let peripheral: CBPeripheral?
     let service: CBService
     public let inputStream: CharacteristicInputStream!
     public let outputStream: CharacteristicOutputStream!
@@ -31,7 +31,7 @@ public class CharacteristicsStreamProvider: NSObject, CBPeripheralDelegate {
 
         super.init()
 
-        peripheral.delegate = self
+        peripheral?.delegate = self
     }
 
     deinit {

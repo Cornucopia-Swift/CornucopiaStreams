@@ -42,7 +42,7 @@ public extension Stream {
             BLEAccessoryManager.shared.findService(with: self.uuid) { result in
                 switch result {
                     case .success(let streams):
-                        self.meta.name = streams.peripheral.name ?? ""
+                        self.meta.name = streams.peripheral?.name ?? ""
                         self.succeedWith(istream: streams.inputStream, ostream: streams.outputStream)
                     case .failure(let error):
                         self.failWith(error: error)

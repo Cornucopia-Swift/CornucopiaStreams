@@ -42,7 +42,11 @@ public class CharacteristicOutputStream: OutputStream {
             os_log("Using BLE write type WITHOUT response (not recommended)", log: OSLog.default, type: .info)
             didOutputWriteTypeWarning = true
         }
+        #if compiler(>=5.5) // catch up with iOS 15 & macOS 12 changed (#available would be better, but does not work here)
+        var maxWriteForCharacteristic = self.characteristic.service!.peripheral!.maximumWriteValueLength(for: writeType)
+        #else
         var maxWriteForCharacteristic = self.characteristic.service.peripheral.maximumWriteValueLength(for: writeType)
+        #endif
         //NOTE: Some BLE 5.0 devices (yes, I'm looking to you, OBDLINK CX) calim to support Queued Writes (see BLE5.0 | Vol 3, Part F,  Section 3.4.6),
         //      which makes CoreBluetooth assume that we can use a pretty high MTU, such as 512. In this case the return values for
         //      peripheral.maximumWriteValueLength(for: .withResponse) ["BLE 5.0 MTU"] and
@@ -50,15 +54,26 @@ public class CharacteristicOutputStream: OutputStream {
         //      queued writes and thus all attempts to write more than the BLE 4.x MTU leads to lost data.
         //      To be on the safe side, we _always_ have to take the lower value of both APIs. :-(
         #if !BLE_5_DEVICES_BEHAVE_CORRECTLY
+        #if compiler(>=5.5) // catch up with iOS 15 & macOS 12 changed (#available would be better, but does not work here)
+        maxWriteForCharacteristic = min(
+            self.characteristic.service!.peripheral!.maximumWriteValueLength(for: .withResponse),
+            self.characteristic.service!.peripheral!.maximumWriteValueLength(for: .withoutResponse)
+            )
+        #else
         maxWriteForCharacteristic = min(
             self.characteristic.service.peripheral.maximumWriteValueLength(for: .withResponse),
             self.characteristic.service.peripheral.maximumWriteValueLength(for: .withoutResponse)
-            )
+        )
+        #endif
         #endif
         let bytesToWrite = min(maxWriteForCharacteristic, len)
         let data = Data(bytes: buffer, count: bytesToWrite)
         //FIXME: If we're writing without response, we could add a check here to see whether we can actually send before attempting to write
+        #if compiler(>=5.5) // catch up with iOS 15 & macOS 12 changed (#available would be better, but does not work here)
+        self.characteristic.service?.peripheral?.writeValue(data, for: self.characteristic, type: writeType)
+        #else
         self.characteristic.service.peripheral.writeValue(data, for: self.characteristic, type: writeType)
+        #endif
         return bytesToWrite
     }
 

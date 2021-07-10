@@ -24,13 +24,21 @@ public class CharacteristicInputStream: InputStream {
 
     public override func open() {
         self.status = .opening
+        #if compiler(>=5.5) // catch up with iOS 15 & macOS 12 changed (#available would be better, but does not work here)
+        self.characteristic.service?.peripheral?.setNotifyValue(true, for: self.characteristic)
+        #else
         self.characteristic.service.peripheral.setNotifyValue(true, for: self.characteristic)
+        #endif
         //NOTE: Open is asynchronous, the control flow will continue (eventually) in `bleSubscriptionCompleted`
     }
 
     public override func close() {
         self.status = .closed
+        #if compiler(>=5.5) // catch up with iOS 15 & macOS 12 changed (#available would be better, but does not work here)
+        self.characteristic.service?.peripheral?.setNotifyValue(false, for: self.characteristic)
+        #else
         self.characteristic.service.peripheral.setNotifyValue(false, for: self.characteristic)
+        #endif
         self.delegate?.stream?(self, handle: .endEncountered)
     }
 
