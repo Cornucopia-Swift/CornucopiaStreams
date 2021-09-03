@@ -7,6 +7,7 @@ class FileHandleInputStream: InputStream {
 
     private let fileHandle: FileHandle
 
+    private var _bytesAvailable: Bool = false
     private var _streamStatus: Stream.Status
     private var _streamError: Error?
     private var _delegate: StreamDelegate?
@@ -37,6 +38,7 @@ class FileHandleInputStream: InputStream {
         guard self._streamStatus != .open else { return }
 
         _ = NotificationCenter.default.addObserver(forName: Notification.Name.NSFileHandleDataAvailable, object: self.fileHandle, queue: nil) { notification in
+            self._bytesAvailable = true
             #if os(Linux)
             self._delegate?.stream(self, handle: .hasBytesAvailable)
             #else
@@ -53,11 +55,12 @@ class FileHandleInputStream: InputStream {
         #endif
     }
 
-    override var hasBytesAvailable: Bool { true }
+    override var hasBytesAvailable: Bool { self._bytesAvailable }
 
     override func read(_ buffer: UnsafeMutablePointer<UInt8>, maxLength len: Int) -> Int {
         guard _streamStatus == .open else { return 0 }
         guard let data = try? self.fileHandle.read(upToCount: 1) else {
+            self._bytesAvailable = false
             #if os(Linux)
             self._delegate?.stream(self, handle: .endEncountered)
             #else
@@ -67,6 +70,7 @@ class FileHandleInputStream: InputStream {
         }
         if data.count > 0 {
             buffer[0] = data[0]
+            self._bytesAvailable = false
             self.fileHandle.waitForDataInBackgroundAndNotify()
         }
         return data.count
