@@ -5,10 +5,11 @@ import XCTest
 final class CornucopiaStreamsTests: XCTestCase, StreamDelegate {
 
     var didSend = false
+    var didReceiveResult = false
 
     func testTCP() {
 
-
+        print("thread: \(Thread.current)")
         let lock = NSLock()
         lock.lock()
         let url = URL(string: "tcp://192.168.0.10:35000")!
@@ -22,13 +23,22 @@ final class CornucopiaStreamsTests: XCTestCase, StreamDelegate {
         }
         lock.lock()
 
+        #if !canImport(FoundationNetworking)
+        // on Darwin-systems, the streams must be scheduled in a runloop, otherwise no transmission will occur
+        inputs!.schedule(in: RunLoop.main, forMode: .common)
+        outputs!.schedule(in: RunLoop.main, forMode: .common)
+        #endif
+
         inputs!.delegate = self
         outputs!.delegate = self
         inputs!.open()
         outputs!.open()
 
         Thread.sleep(forTimeInterval: 1)
-        RunLoop.main.run()
+
+        while !self.didReceiveResult {
+            RunLoop.main.run(until: Date() + 1)
+        }
     }
 
     func stream(_ stream: Stream, handle event: Stream.Event) {
@@ -40,13 +50,21 @@ final class CornucopiaStreamsTests: XCTestCase, StreamDelegate {
         }
 
         if stream is InputStream && event == .hasBytesAvailable {
-            var buffer = [UInt8](repeating: 0, count: 10)
-            (stream as! InputStream).read(&buffer, maxLength: 10)
-            let ch = Character(UnicodeScalar(buffer[0]))
-            var string = String(ch)
-            if string == "\r" { string = "\\r" }
-            if string == "\n" { string = "\\n" }
-            print("Read '\(string)'")
+            let maxRead = 100
+            var buffer = [UInt8](repeating: 0, count: maxRead)
+            (stream as! InputStream).read(&buffer, maxLength: maxRead)
+            var ms = ""
+            for i in 0..<maxRead {
+                let ch = Character(UnicodeScalar(buffer[i]))
+                var string = String(ch)
+                if string == "\r" { string = "\\r" }
+                if string == "\n" { string = "\\n" }
+                ms += string
+            }
+            print("Read '\(ms)'")
+            if ms.hasPrefix("ELM327") {
+                self.didReceiveResult = true
+            }
         }
     }
 
