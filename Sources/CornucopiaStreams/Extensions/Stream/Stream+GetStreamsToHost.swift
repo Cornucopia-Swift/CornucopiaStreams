@@ -3,6 +3,9 @@
 //
 import Foundation
 import CoreFoundation
+
+/// It's possible to use the low level socket helper unconditionally (instead of Darwin's getStreamsToHost), just
+/// change this to 'true //' here and below.
 #if canImport(FoundationNetworking)
 import CSocketHelper
 #endif
