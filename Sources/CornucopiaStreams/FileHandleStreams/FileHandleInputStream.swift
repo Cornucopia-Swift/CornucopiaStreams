@@ -68,7 +68,7 @@ class FileHandleInputStream: InputStream {
     override func read(_ buffer: UnsafeMutablePointer<UInt8>, maxLength len: Int) -> Int {
         guard _streamStatus == .open else { return 0 }
         #if canImport(FoundationNetworking)
-        let maxLength = len
+        let maxLength = 1
         #else
         // For some reason, Darwin-platforms throw a "Encountered read failure 35 Resource temporarily unavailable", if you try to read more than the actual bytes available in the read queue.
         let maxLength = 1

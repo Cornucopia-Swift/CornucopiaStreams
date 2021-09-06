@@ -52,9 +52,9 @@ final class CornucopiaStreamsTests: XCTestCase, StreamDelegate {
         if stream is InputStream && event == .hasBytesAvailable {
             let maxRead = 100
             var buffer = [UInt8](repeating: 0, count: maxRead)
-            (stream as! InputStream).read(&buffer, maxLength: maxRead)
+            let nRead = (stream as! InputStream).read(&buffer, maxLength: maxRead)
             var ms = ""
-            for i in 0..<maxRead {
+            for i in 0..<nRead {
                 let ch = Character(UnicodeScalar(buffer[i]))
                 var string = String(ch)
                 if string == "\r" { string = "\\r" }
