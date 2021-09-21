@@ -18,7 +18,7 @@ public class CharacteristicsStreamProvider: NSObject, CBPeripheralDelegate {
     /// Create the stream pair for the first applicable `CBCharacteristic` in the specified `CBService`.
     public init(forService service: CBService) {
         self.service = service
-        self.peripheral = service.peripheral
+        self.peripheral = service.peripheral! // fails when gone
 
         let readCharacteristic = service.characteristics?.first { $0.properties.contains(.notify) || $0.properties.contains(.indicate) }
         let writeCharacteristic = service.characteristics?.first { $0.properties.contains(.write) || $0.properties.contains(.writeWithoutResponse) }

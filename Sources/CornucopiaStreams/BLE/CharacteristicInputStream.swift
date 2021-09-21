@@ -24,13 +24,19 @@ public class CharacteristicInputStream: InputStream {
 
     public override func open() {
         self.status = .opening
-        self.characteristic.service.peripheral.setNotifyValue(true, for: self.characteristic)
+        guard let peripheral = self.characteristic.service?.peripheral else {
+            self.status = .error
+            return
+        }
+        peripheral.setNotifyValue(true, for: self.characteristic)
         //NOTE: Open is asynchronous, the control flow will continue (eventually) in `bleSubscriptionCompleted`
     }
 
     public override func close() {
         self.status = .closed
-        self.characteristic.service.peripheral.setNotifyValue(false, for: self.characteristic)
+        if let peripheral = self.characteristic.service?.peripheral {
+            peripheral.setNotifyValue(false, for: self.characteristic)
+        }
         self.delegate?.stream?(self, handle: .endEncountered)
     }
 

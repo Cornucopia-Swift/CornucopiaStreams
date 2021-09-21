@@ -4,10 +4,10 @@ import PackageDescription
 let package = Package(
     name: "CornucopiaStreams",
     platforms: [
-        .macOS("10.15.4"),
-        .iOS("13.4"),
-        .tvOS("13.4"),
-        .watchOS("6"),
+        .macOS("12"),
+        .iOS("15"),
+        .tvOS("15"),
+        .watchOS("8"),
     ],
     products: [
         .library(
@@ -20,7 +20,6 @@ let package = Package(
         .target(name: "CSocketHelper"),
         .target(name: "CornucopiaStreams",
                 dependencies: ["CSocketHelper"]
-                //,swiftSettings: [.define("TRACE")]
         ),
         .testTarget(name: "CornucopiaStreamsTests", dependencies: ["CornucopiaStreams"]),
     ]
