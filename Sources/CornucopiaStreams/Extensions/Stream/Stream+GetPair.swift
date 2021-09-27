@@ -18,11 +18,28 @@ public extension Stream {
     typealias PairProvider = (URL, @escaping(PairResultHandler)) -> ()
     typealias PairResult = Result<Pair, PairError>
     typealias PairResultHandler = (PairResult) -> ()
+    typealias PairContinuation = CheckedContinuation<Pair, PairError>
     typealias ConnectionProvider = (URL, @escaping(Stream.PairResultHandler)) -> Stream.Connection
 
     /// Returns the supported schemes on this platform.
     static func CC_supportedSchemes() -> Set<String> {
         Set(self.connectionProviders.keys)
+    }
+
+    /// Computes a pair of I/O streams to the specified `url` and returns the result async.
+    static func CC_getStreamPair(to url: URL, timeout: TimeInterval = 0.0) async throws -> Pair {
+
+        try await withCheckedThrowingContinuation { continuation in
+            Stream.CC_getStreamPair(to: url, timeout: timeout) { result in
+                switch result {
+                    case .success(let pair):
+                        continuation.resume(returning: pair)
+
+                    case .failure(let error):
+                        continuation.resume(throwing: error)
+                }
+            }
+        }
     }
 
     /// Computes a pair of I/O streams to the specified `url` and delivers the result via the closure.
