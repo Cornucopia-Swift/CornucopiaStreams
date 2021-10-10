@@ -68,12 +68,10 @@ class FileHandleOutputStream: OutputStream {
 private extension FileHandleOutputStream {
 
     func reportDelegateEvent(_ event: Stream.Event) {
-        DispatchQueue.main.async {
-            #if os(Linux)
-            self._delegate?.stream(self, handle: event)
-            #else
-            self._delegate?.stream?(self, handle: event)
-            #endif
-        }
+        #if os(Linux)
+        self._delegate?.stream(self, handle: event)
+        #else
+        self._delegate?.stream?(self, handle: event)
+        #endif
     }
 }
