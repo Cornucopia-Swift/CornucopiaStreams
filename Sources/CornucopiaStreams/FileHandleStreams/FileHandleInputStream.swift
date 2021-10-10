@@ -10,11 +10,7 @@ class FileHandleInputStream: InputStream {
     private var _streamStatus: Stream.Status  = .notOpen {
         didSet {
             if self._streamStatus == .open {
-                #if os(Linux)
-                self.delegate?.stream(self, handle: .openCompleted)
-                #else
-                self.delegate?.stream?(self, handle: .openCompleted)
-                #endif
+                self.reportDelegateEvent(.openCompleted)
             }
         }
     }
@@ -23,11 +19,7 @@ class FileHandleInputStream: InputStream {
     private var _hasBytesAvailable: Bool = false {
         didSet {
             if _hasBytesAvailable {
-                #if os(Linux)
-                self._delegate?.stream(self, handle: .hasBytesAvailable)
-                #else
-                self._delegate?.stream?(self, handle: .hasBytesAvailable)
-                #endif
+                self.reportDelegateEvent(.hasBytesAvailable)
             }
         }
     }
@@ -74,11 +66,7 @@ class FileHandleInputStream: InputStream {
         let maxLength = 1
         #endif
         guard let data = try? self.fileHandle.read(upToCount: maxLength) else {
-            #if os(Linux)
-            self._delegate?.stream(self, handle: .endEncountered)
-            #else
-            self._delegate?.stream?(self, handle: .endEncountered)
-            #endif
+            self.reportDelegateEvent(.endEncountered)
             return 0
         }
         if data.count > 0 {
@@ -100,4 +88,15 @@ class FileHandleInputStream: InputStream {
     #endif
     override func schedule(in aRunLoop: RunLoop, forMode mode: RunLoop.Mode) { }
     override func remove(from aRunLoop: RunLoop, forMode mode: RunLoop.Mode) { }
+}
+
+private extension FileHandleInputStream {
+
+    func reportDelegateEvent(_ event: Stream.Event) {
+        #if os(Linux)
+        self._delegate?.stream(self, handle: event)
+        #else
+        self._delegate?.stream?(self, handle: event)
+        #endif
+    }
 }
