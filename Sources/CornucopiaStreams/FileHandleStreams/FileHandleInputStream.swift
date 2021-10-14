@@ -2,10 +2,19 @@
 //  (C) Dr. Michael 'Mickey' Lauer <mickey@vanille-media.de>
 //
 import Foundation
+#if canImport(ObjectiveC)
+import Darwin
+public let posix_read = Darwin.read
+#else
+import CoreFoundation
+import Glibc
+public let posix_read  = Glibc.read
+#endif
 
 class FileHandleInputStream: InputStream {
 
     private let fileHandle: FileHandle
+    private weak var runLoop: RunLoop?
 
     private var _streamStatus: Stream.Status  = .notOpen {
         didSet {
@@ -47,36 +56,39 @@ class FileHandleInputStream: InputStream {
     override func open() {
         guard self._streamStatus != .open else { return }
 
+        //FIXME: This API does not integrate with the runloop system, but is rather a libdispatch.
         _ = NotificationCenter.default.addObserver(forName: Notification.Name.NSFileHandleDataAvailable, object: self.fileHandle, queue: nil) { notification in
-            self._hasBytesAvailable = true
+            //FIXME: Hence we need to do a little runloop dance here
+            self.runLoop?.perform() {
+                self._hasBytesAvailable = true
+            }
+            CFRunLoopWakeUp(self.runLoop?.getCFRunLoop())
         }
         // Must be called from a thread that has an active runloop, see https://developer.apple.com/documentation/foundation/nsfilehandle/1409270-waitfordatainbackgroundandnotify
-        RunLoop.current.perform {
+        self.runLoop?.perform {
             self.fileHandle.waitForDataInBackgroundAndNotify()
         }
         self._streamStatus = .open
+        CFRunLoopWakeUp(self.runLoop?.getCFRunLoop())
     }
 
     override var hasBytesAvailable: Bool { self._hasBytesAvailable }
 
     override func read(_ buffer: UnsafeMutablePointer<UInt8>, maxLength len: Int) -> Int {
         guard _streamStatus == .open else { return 0 }
-        #if canImport(FoundationNetworking)
-        let maxLength = 1
-        #else
-        // For some reason, Darwin-platforms throw a "Encountered read failure 35 Resource temporarily unavailable", if you try to read more than the actual bytes available in the read queue.
-        let maxLength = 1
-        #endif
-        guard let data = try? self.fileHandle.read(upToCount: maxLength) else {
+        // For some reason, the NSFileHandle's read implementation seems to have severe bugs
+        // both on Darwin- and non-Darwin-platforms, e.g.
+        // "Encountered read failure 35 Resource temporarily unavailable",
+        // if you try to read more than the actual bytes available in the read queue.
+        // To play safe, we better use the lowlevel read(2) here.
+        let nread = posix_read(self.fileHandle.fileDescriptor, buffer, len)
+        guard nread >= 1 else {
             self.reportDelegateEvent(.endEncountered)
             return 0
         }
-        if data.count > 0 {
-            data.copyBytes(to: buffer, count: min(len, data.count))
-            self._hasBytesAvailable = false
-            self.fileHandle.waitForDataInBackgroundAndNotify()
-        }
-        return data.count
+        self._hasBytesAvailable = false
+        self.fileHandle.waitForDataInBackgroundAndNotify()
+        return nread
     }
 
     override func close() {
@@ -88,8 +100,12 @@ class FileHandleInputStream: InputStream {
     override func property(forKey key: Stream.PropertyKey) -> Any? { nil }
     override func setProperty(_ property: Any?, forKey key: Stream.PropertyKey) -> Bool { false }
     #endif
-    override func schedule(in aRunLoop: RunLoop, forMode mode: RunLoop.Mode) { }
-    override func remove(from aRunLoop: RunLoop, forMode mode: RunLoop.Mode) { }
+    override func schedule(in aRunLoop: RunLoop, forMode mode: RunLoop.Mode) {
+        self.runLoop = aRunLoop
+    }
+    override func remove(from aRunLoop: RunLoop, forMode mode: RunLoop.Mode) {
+        self.runLoop = nil
+    }
 }
 
 private extension FileHandleInputStream {
