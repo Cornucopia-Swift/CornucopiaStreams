@@ -17,6 +17,7 @@ public class CharacteristicOutputStream: OutputStream {
 
     private var status: Stream.Status = .notOpen
     private var delega: StreamDelegate? = nil
+    private weak var runLoop: RunLoop?
     private var didOutputWriteTypeWarning: Bool = false
 
     init(with characteristic: CBCharacteristic) {
@@ -28,8 +29,8 @@ public class CharacteristicOutputStream: OutputStream {
     public override func open() {
         self.status = .opening
         self.status = .open
-        self.delegate?.stream?(self, handle: .openCompleted)
-        self.delegate?.stream?(self, handle: .hasSpaceAvailable)
+        self.reportDelegateEvent(.openCompleted)
+        self.reportDelegateEvent(.hasSpaceAvailable)
     }
 
     /// Write to the stream.
@@ -66,22 +67,35 @@ public class CharacteristicOutputStream: OutputStream {
     /// Close the stream.
     public override func close() {
         self.status = .closed
-        self.delegate?.stream?(self, handle: .endEncountered)
+        self.reportDelegateEvent(.endEncountered)
     }
 
     public override var hasSpaceAvailable: Bool { self.status == .open }
-    public override func schedule(in aRunLoop: RunLoop, forMode mode: RunLoop.Mode) { }
-    public override func remove(from aRunLoop: RunLoop, forMode mode: RunLoop.Mode) { }
+    public override func schedule(in aRunLoop: RunLoop, forMode mode: RunLoop.Mode) { self.runLoop = aRunLoop }
+    public override func remove(from aRunLoop: RunLoop, forMode mode: RunLoop.Mode) { self.runLoop = nil }
 }
 
 internal extension CharacteristicOutputStream {
 
     func bleWriteCompleted() {
-        self.delegate?.stream?(self, handle: .hasSpaceAvailable)
+        self.reportDelegateEvent(.hasSpaceAvailable)
     }
 
     func bleDisconnected() {
-        self.delegate?.stream?(self, handle: .endEncountered)
+        self.reportDelegateEvent(.endEncountered)
+    }
+}
+
+private extension CharacteristicOutputStream {
+
+    func reportDelegateEvent(_ event: Stream.Event) {
+        guard let runloop = self.runLoop else {
+            self.delegate?.stream?(self, handle: event)
+            return
+        }
+        runloop.perform {
+            self.delegate?.stream?(self, handle: event)
+        }
     }
 }
 #endif

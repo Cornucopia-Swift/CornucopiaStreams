@@ -16,6 +16,7 @@ public class CharacteristicInputStream: InputStream {
     }
     private var status: Stream.Status = .notOpen
     private var delega: StreamDelegate? = nil
+    private weak var runLoop: RunLoop?
 
     init(with characteristic: CBCharacteristic) {
         self.characteristic = characteristic
@@ -37,7 +38,7 @@ public class CharacteristicInputStream: InputStream {
         if let peripheral = self.characteristic.service?.peripheral {
             peripheral.setNotifyValue(false, for: self.characteristic)
         }
-        self.delegate?.stream?(self, handle: .endEncountered)
+        self.reportDelegateEvent(.endEncountered)
     }
 
     public override func read(_ buffer: UnsafeMutablePointer<UInt8>, maxLength len: Int) -> Int {
@@ -54,8 +55,8 @@ public class CharacteristicInputStream: InputStream {
     public override var hasBytesAvailable: Bool { self.status == .open && !self.incoming.isEmpty }
 
     public override func getBuffer(_ buffer: UnsafeMutablePointer<UnsafeMutablePointer<UInt8>?>, length len: UnsafeMutablePointer<Int>) -> Bool { false }
-    public override func schedule(in aRunLoop: RunLoop, forMode mode: RunLoop.Mode) { }
-    public override func remove(from aRunLoop: RunLoop, forMode mode: RunLoop.Mode) { }
+    public override func schedule(in aRunLoop: RunLoop, forMode mode: RunLoop.Mode) { self.runLoop = aRunLoop }
+    public override func remove(from aRunLoop: RunLoop, forMode mode: RunLoop.Mode) { self.runLoop = nil }
 }
 
 internal extension CharacteristicInputStream {
@@ -63,28 +64,41 @@ internal extension CharacteristicInputStream {
     func bleSubscriptionCompleted(error: Error?) {
         guard error == nil else {
             self.status = .error
-            self.delegate?.stream?(self, handle: .errorOccurred)
+            self.reportDelegateEvent(.errorOccurred)
             return
         }
         self.status = .open
-        self.delegate?.stream?(self, handle: .openCompleted)
+        self.reportDelegateEvent(.openCompleted)
         //FIXME: Should we try to read to find out whether there are already bytes lurking in the lowlevel buffer?
         //self.characteristic.service.peripheral.readValue(for: self.characteristic)
     }
 
     func bleReadCompleted(error: Error?) {
         guard error == nil else {
-            self.delegate?.stream?(self, handle: .errorOccurred)
+            self.reportDelegateEvent(.errorOccurred)
             return
         }
         guard let data = self.characteristic.value else { return }
         self.incoming.append(data)
-        self.delegate?.stream?(self, handle: .hasBytesAvailable)
+        self.reportDelegateEvent(.hasBytesAvailable)
     }
 
     func bleDisconnected() {
-        self.delegate?.stream?(self, handle: .hasBytesAvailable)
-        self.delegate?.stream?(self, handle: .endEncountered)
+        self.reportDelegateEvent(.hasBytesAvailable)
+        self.reportDelegateEvent(.endEncountered)
+    }
+}
+
+private extension CharacteristicInputStream {
+
+    func reportDelegateEvent(_ event: Stream.Event) {
+        guard let runloop = self.runLoop else {
+            self.delegate?.stream?(self, handle: event)
+            return
+        }
+        runloop.perform {
+            self.delegate?.stream?(self, handle: event)
+        }
     }
 }
 #endif
