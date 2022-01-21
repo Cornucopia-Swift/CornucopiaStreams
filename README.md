@@ -67,6 +67,10 @@ Stream.CC_getStreamPair(to: url) { result in
 
 Some of the streams provide metadata, e.g., the `name` for BLE devices, which you can access via the `CC_meta` property.
 
+### Known Issues
+
+* The way our CoreBluetooth connection manager currently works supports only one concurrent connection at a time. I consider this a bug. Patches welcome ;-)
+
 ### Contributions
 
 Feel free to use under the terms of the MIT, if you find anything helpful here. Contributions are always welcome! Stay safe and sound!
