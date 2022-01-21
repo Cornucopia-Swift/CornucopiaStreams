@@ -25,18 +25,16 @@ public extension Stream {
             switch service.count {
                 case 4:
                     guard service.rangeOfCharacter(from: Self.forbiddenCharsetCBUUID4) == nil else {
-                        self.failWith(error: .invalidParameters)
-                        return
+                        return self.failWith(error: .invalidParameters)
                     }
                     uuid = CBUUID(string: service)
-                case 6:
+                case 6, 36:
                     guard service.rangeOfCharacter(from: Self.forbiddenCharsetCBUUID6) == nil else {
-                        self.failWith(error: .invalidParameters)
-                        return
+                        return self.failWith(error: .invalidParameters)
                     }
                     uuid = CBUUID(string: service)
                 default:
-                    self.failWith(error: .invalidParameters)
+                    return self.failWith(error: .invalidParameters)
             }
 
             BLEAccessoryManager.shared.findService(with: self.uuid) { result in
