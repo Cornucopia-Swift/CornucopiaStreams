@@ -84,7 +84,6 @@ internal extension CharacteristicInputStream {
     }
 
     func bleDisconnected() {
-        self.reportDelegateEvent(.hasBytesAvailable)
         self.reportDelegateEvent(.endEncountered)
     }
 }
