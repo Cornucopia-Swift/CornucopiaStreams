@@ -13,6 +13,7 @@ public extension Stream {
         static let forbiddenCharsetCBUUID4 = CharacterSet(charactersIn: "0123456789ABCDEF").inverted
         static let forbiddenCharsetCBUUID6 = CharacterSet(charactersIn: "0123456789ABCDEF-").inverted
 
+        lazy var accessoryManager: BLEAccessoryManager = .init()
         var uuid: CBUUID!
         weak var peripheral: CBPeripheral?
 
@@ -37,7 +38,7 @@ public extension Stream {
                     return self.failWith(error: .invalidParameters)
             }
 
-            BLEAccessoryManager.shared.findService(with: self.uuid) { result in
+            self.accessoryManager.findService(with: self.uuid) { result in
                 switch result {
                     case .success(let streams):
                         self.meta.name = streams.peripheral.name ?? ""
@@ -49,9 +50,8 @@ public extension Stream {
         }
 
         public override func cancel() {
-            BLEAccessoryManager.shared.cancelFind(with: self.uuid)
+            self.accessoryManager.cancelFind(with: self.uuid)
         }
-
     }
 }
 #endif

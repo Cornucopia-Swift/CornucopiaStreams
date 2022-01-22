@@ -12,14 +12,12 @@ public class BLEAccessoryManager: NSObject {
     public typealias FindServiceResult = Result<CharacteristicsStreamProvider, Stream.PairError>
     public typealias FindServiceResultHandler = (FindServiceResult) -> ()
 
-    public static let shared: BLEAccessoryManager = BLEAccessoryManager()
-
     let manager: CBCentralManager!
     var pendingConnections: [CBUUID: FindServiceResultHandler] = [:]
     var pendingPeripherals: [UUID: CBPeripheral] = [:]
     var activeSessions: [UUID: CharacteristicsStreamProvider] = [:]
 
-    override private init() {
+    override public init() {
 
         self.manager = CBCentralManager()
         super.init()
@@ -29,11 +27,12 @@ public class BLEAccessoryManager: NSObject {
 
     public func findService(with uuid: CBUUID, then: @escaping(FindServiceResultHandler)) {
 
-        guard case .poweredOn = self.manager.state else {
-            self.pendingConnections[uuid] = then
-            return
+        precondition(self.pendingConnections[uuid] == nil, "Can't look for the same UUID (\(uuid)) more than once.")
+        self.pendingConnections[uuid] = then
+
+        if self.manager.state == .poweredOn {
+            self.startScanning()
         }
-        self.startScanning()
     }
 
     public func cancelFind(with uuid: CBUUID) {
@@ -47,6 +46,9 @@ public class BLEAccessoryManager: NSObject {
 private extension BLEAccessoryManager {
 
     func startScanning() {
+        if self.manager.isScanning {
+            self.manager.stopScan()
+        }
         let serviceUUIDs: [CBUUID] = self.pendingConnections.keys.map { $0 as CBUUID }
         let connectedPeripherals = self.manager.retrieveConnectedPeripherals(withServices: serviceUUIDs)
         connectedPeripherals.forEach {
