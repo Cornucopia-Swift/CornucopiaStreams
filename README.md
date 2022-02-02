@@ -53,7 +53,7 @@ Stream.CC_getStreamPair(to: url) { result in
 }
 ```
 
-Open a connection to a BLE device:
+Open a connection to a BLE device providing service `FFF0`:
 
 ```swift
 import CornucopiaStreams
@@ -64,6 +64,33 @@ Stream.CC_getStreamPair(to: url) { result in
     … do something with the streams …
 }
 ```
+
+Open a connection to the BLE device `E32E4466-A24A-E46B-EE79-436569D6FC6D` that provides service `FFF0`:
+
+```swift
+import CornucopiaStreams
+
+let url = URL(string: "ble://FFF0/E32E4466-A24A-E46B-EE79-436569D6FC6D")!
+Stream.CC_getStreamPair(to: url) { result in
+    guard case .success(let (inputStream, outputStream)) = result else { fatalError() }
+    … do something with the streams …
+}
+```
+
+Since version 0.9.3, you can alternative use an `async` call to connect to a stream:
+
+Open a connection to the BLE device `E32E4466-A24A-E46B-EE79-436569D6FC6D` that provides service `FFF0`:
+
+```swift
+import CornucopiaStreams
+
+let url = URL(string: "ble://FFF0/E32E4466-A24A-E46B-EE79-436569D6FC6D")!
+let streams = try await CC_getStreamPair(to: url)
+… do something with the streams …
+}
+```
+
+#### Metadata
 
 Some of the streams provide metadata, e.g., the `name` for BLE devices, which you can access via the `CC_meta` property.
 
