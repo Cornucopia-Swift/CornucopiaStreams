@@ -13,52 +13,28 @@ public class BLEAccessoryManager: NSObject {
     public typealias FindServiceResultHandler = (FindServiceResult) -> ()
 
     let manager: CBCentralManager!
-    var pendingConnections: [CBUUID: FindServiceResultHandler] = [:]
+    let desiredService: CBUUID
+    let desiredDevice: UUID?
+    var resultHandler: FindServiceResultHandler?
     var pendingPeripherals: [UUID: CBPeripheral] = [:]
-    var activeSessions: [UUID: CharacteristicsStreamProvider] = [:]
+    var peripheral: CBPeripheral? = nil
+    var activeSession: CharacteristicsStreamProvider? = nil
 
-    override public init() {
+    public init(uuid: CBUUID, peer: UUID? = nil, then: @escaping(FindServiceResultHandler)) {
 
+        self.desiredService = uuid
+        self.desiredDevice = peer
+        self.resultHandler = then
         self.manager = CBCentralManager()
         super.init()
-
         self.manager.delegate = self
     }
 
-    public func findService(with uuid: CBUUID, then: @escaping(FindServiceResultHandler)) {
+    public func cancel() {
 
-        precondition(self.pendingConnections[uuid] == nil, "Can't look for the same UUID (\(uuid)) more than once.")
-        self.pendingConnections[uuid] = then
-
-        if self.manager.state == .poweredOn {
-            self.startScanning()
-        }
-    }
-
-    public func cancelFind(with uuid: CBUUID) {
-
-        self.pendingConnections.removeValue(forKey: uuid)
-        guard self.pendingConnections.isEmpty else { return }
-        self.stopScanning()
-    }
-}
-
-private extension BLEAccessoryManager {
-
-    func startScanning() {
-        if self.manager.isScanning {
-            self.manager.stopScan()
-        }
-        let serviceUUIDs: [CBUUID] = self.pendingConnections.keys.map { $0 as CBUUID }
-        let connectedPeripherals = self.manager.retrieveConnectedPeripherals(withServices: serviceUUIDs)
-        connectedPeripherals.forEach {
-            self.centralManager(self.manager, didDiscover: $0, advertisementData: [:], rssi: $0.rssi ?? 0.42)
-        }
-        self.manager.scanForPeripherals(withServices: serviceUUIDs, options: nil)
-    }
-
-    func stopScanning() {
         self.manager.stopScan()
+        self.resultHandler = nil
+        self.activeSession = nil
     }
 }
 
@@ -67,8 +43,12 @@ extension BLEAccessoryManager: CBCentralManagerDelegate {
     public func centralManagerDidUpdateState(_ central: CBCentralManager) {
 
         guard case .poweredOn = central.state else { return }
-        guard !self.pendingConnections.isEmpty else { return }
-        self.startScanning()
+
+        let connectedPeripherals = self.manager.retrieveConnectedPeripherals(withServices: [self.desiredService])
+        connectedPeripherals.forEach {
+            self.centralManager(self.manager, didDiscover: $0, advertisementData: [:], rssi: $0.rssi ?? 0.42)
+        }
+        self.manager.scanForPeripherals(withServices: [self.desiredService], options: nil)
     }
 
     public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
@@ -81,8 +61,8 @@ extension BLEAccessoryManager: CBCentralManagerDelegate {
 extension BLEAccessoryManager: CBPeripheralDelegate {
 
     public func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        let serviceUUIDs: [CBUUID] = self.pendingConnections.keys.map { $0 as CBUUID }
-        peripheral.discoverServices(serviceUUIDs)
+        if let desiredDevice = self.desiredDevice, peripheral.identifier != desiredDevice { return }
+        peripheral.discoverServices([self.desiredService])
     }
 
     public func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
@@ -106,26 +86,18 @@ extension BLEAccessoryManager: CBPeripheralDelegate {
         guard rc != nil, wc != nil else {
             return
         }
-
+        self.manager.stopScan()
+        self.peripheral = peripheral
         self.pendingPeripherals.removeValue(forKey: peripheral.identifier)
         let streamProvider = CharacteristicsStreamProvider(forService: service)
-        self.activeSessions[peripheral.identifier] = streamProvider
-
-        guard let handler = self.pendingConnections.removeValue(forKey: service.uuid) else {
-            os_log("Did discover characteristics for service %@, but there is no pending connection for this UUID anymore.", log: log, type: .info, service.uuid.description)
-            return
-        }
+        self.activeSession = streamProvider
         let result = FindServiceResult.success(streamProvider)
-        handler(result)
-
-        if self.pendingConnections.isEmpty {
-            self.manager.stopScan()
-        }
+        self.resultHandler?(result)
     }
 
     public func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
-        guard let streamProvider = self.activeSessions[peripheral.identifier] else { return }
-        self.activeSessions.removeValue(forKey: peripheral.identifier)
+        guard self.peripheral == peripheral else { return }
+        self.activeSession = nil
     }
 }
 #endif
