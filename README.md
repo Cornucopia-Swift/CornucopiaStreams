@@ -85,9 +85,8 @@ Open a connection to the BLE device `E32E4466-A24A-E46B-EE79-436569D6FC6D` that 
 import CornucopiaStreams
 
 let url = URL(string: "ble://FFF0/E32E4466-A24A-E46B-EE79-436569D6FC6D")!
-let streams = try await CC_getStreamPair(to: url)
+let streams = try await Stream.CC_getStreamPair(to: url)
 … do something with the streams …
-}
 ```
 
 #### Metadata
