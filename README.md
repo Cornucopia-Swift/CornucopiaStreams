@@ -77,7 +77,7 @@ Stream.CC_getStreamPair(to: url) { result in
 }
 ```
 
-Since version 0.9.3, you can alternative use an `async` call to connect to a stream:
+Since version 0.9.3, you can alternatively use an `async` call to connect to a stream:
 
 Open a connection to the BLE device `E32E4466-A24A-E46B-EE79-436569D6FC6D` that provides service `FFF0`:
 
@@ -92,6 +92,21 @@ let streams = try await Stream.CC_getStreamPair(to: url)
 #### Metadata
 
 Some of the streams provide metadata, e.g., the `name` for BLE devices, which you can access via the `CC_meta` property.
+
+### Roadmap to 1.0 and beyond
+
+Before the big 1.0, this project wants to
+
+- [ ] Provide a comprehensive testsuite.
+- [ ] Support cancelling a pending connection.
+- [ ] Support force-closing an active connection.
+- [ ] Support `Task` cancellation for pending connections.
+
+After 1.0, we might tackle additional connection mechanisms, perhaps
+
+- Bluetooth 3.x (rfcomm)?
+- Direct access to L2CAP?
+- SSL sockets?
 
 ### Contributions
 
