@@ -6,7 +6,8 @@ import Foundation
 public extension Stream {
 
     /// Stream connection errors.
-    enum PairError: Error {
+    @frozen enum PairError: Error {
+        case cancelled
         case invalidParameters
         case notFound
         case timeout
@@ -18,8 +19,8 @@ public extension Stream {
     typealias PairProvider = (URL, @escaping(PairResultHandler)) -> ()
     typealias PairResult = Result<Pair, PairError>
     typealias PairResultHandler = (PairResult) -> ()
-    typealias PairContinuation = CheckedContinuation<Pair, PairError>
-    typealias ConnectionProvider = (URL, @escaping(Stream.PairResultHandler)) -> Stream.Connection
+    typealias PairContinuation = CheckedContinuation<Pair, Swift.Error>
+    typealias ConnectionProvider = (URL, PairContinuation) -> Stream.Connection
 
     /// Returns the supported schemes on this platform.
     static func CC_supportedSchemes() -> Set<String> {
@@ -29,46 +30,38 @@ public extension Stream {
     /// Computes a pair of I/O streams to the specified `url` and returns the result async.
     static func CC_getStreamPair(to url: URL, timeout: TimeInterval = 0.0) async throws -> Pair {
 
-        try await withCheckedThrowingContinuation { continuation in
-            Stream.CC_getStreamPair(to: url, timeout: timeout) { result in
-                switch result {
-                    case .success(let pair):
-                        continuation.resume(returning: pair)
+        let scheme = url.scheme ?? "unknown"
+        guard let provider = self.connectionProviders[scheme] else { throw PairError.unknownScheme }
 
-                    case .failure(let error):
-                        continuation.resume(throwing: error)
+        return try await withTaskCancellationHandler(handler: {
+            guard let connection = self.CC_pendingConnections[url] else {
+                print("Connection for \(url) no longer pending, can't cancel.")
+                return
+            }
+            connection.cancel()
+            connection.failWith(error: .cancelled)
+        }) {
+            return try await withCheckedThrowingContinuation { (continuation: PairContinuation) in
+                let connection = provider(url, continuation)
+                if timeout > 0 {
+                    connection.timer = {
+                        let t = DispatchSource.makeTimerSource(flags: DispatchSource.TimerFlags(), queue: DispatchQueue.main)
+                        t.schedule(deadline: .now() + timeout)
+                        t.setEventHandler { [weak connection] in
+                            connection?.cancel()
+                            connection?.failWith(error: .timeout)
+                        }
+                        t.resume()
+                        return t
+                    }()
                 }
+                self.CC_pendingConnections[url] = connection
+                connection.setup()
             }
         }
     }
 
-    /// Computes a pair of I/O streams to the specified `url` and delivers the result via the closure.
-    static func CC_getStreamPair(to url: URL, timeout: TimeInterval = 0.0, then: @escaping(PairResultHandler)) {
-
-        let scheme = url.scheme ?? "unknown"
-        guard let provider = self.connectionProviders[scheme] else {
-            let result: PairResult = .failure(.unknownScheme)
-            then(result)
-            return
-        }
-        let connection = provider(url, then)
-        if timeout > 0 {
-            connection.timer = {
-                let t = DispatchSource.makeTimerSource(flags: DispatchSource.TimerFlags(), queue: DispatchQueue.main)
-                t.schedule(deadline: .now() + timeout)
-                t.setEventHandler { [weak connection] in
-                    connection?.cancel()
-                    connection?.failWith(error: .timeout)
-                }
-                t.resume()
-                return t
-            }()
-        }
-        self.CC_pendingConnections[url] = connection
-        connection.setup()
-    }
-
-    /// Removes a connection from the list of acctive connections.
+    /// Removes a connection from the list of active connections.
     static func CC_disposeConnection(to url: URL) {
         self.CC_activeConnections.removeValue(forKey: url)
     }
@@ -81,65 +74,3 @@ public extension Stream {
     }
 }
 
-public extension Stream {
-
-    /// An abstract connection class. Derive from this class, if you want to add a new connection provider.
-    class Connection {
-
-        let url: URL
-        let meta: Meta
-        private let then: PairResultHandler
-        fileprivate var timer: DispatchSourceTimer?
-
-        public init(url: URL, then: @escaping(PairResultHandler)) {
-            self.url = url
-            self.meta = Meta(url: url)
-            self.then = then
-        }
-        public func setup() {
-            fatalError("MUST be implementeded in your connection subclass")
-        }
-        public func cancel() {
-            // SHOULD be implemented in the connection subclass
-        }
-        public final func failWith(error: PairError) {
-            self.timer?.cancel(); self.timer = nil
-            Stream.CC_pendingConnections.removeValue(forKey: self.url)
-            let result = PairResult.failure(error)
-            self.then(result)
-        }
-        public final func succeedWith(istream: InputStream, ostream: OutputStream) {
-            self.timer?.cancel(); self.timer = nil
-            istream.CC_storeMeta(self.meta)
-            ostream.CC_storeMeta(self.meta)
-            Stream.CC_pendingConnections.removeValue(forKey: self.url)
-            Stream.CC_activeConnections[self.url] = self
-            let result = PairResult.success((istream, ostream))
-            self.then(result)
-        }
-
-        deinit {
-            //print("deinit \(self)")
-        }
-    }
-}
-
-internal extension Stream {
-
-    static var CC_pendingConnections: [URL: Connection] = [:]
-    static var CC_activeConnections: [URL: Connection] = [:]
-
-    static var connectionProviders: [String: Stream.ConnectionProvider] = {
-        var providers: [String: Stream.ConnectionProvider] = [
-            "tty": { TTYConnection(url: $0, then: $1) },
-            "tcp": { TCPConnection(url: $0, then: $1) },
-        ]
-#if canImport(ExternalAccessory)
-        providers["ea"] = { EAConnection(url: $0, then: $1) }
-#endif
-#if canImport(CoreBluetooth)
-        providers["ble"] = { BLEConnection(url: $0, then: $1) }
-#endif
-        return providers
-    }()
-}

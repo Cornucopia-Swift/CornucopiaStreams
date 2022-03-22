@@ -7,34 +7,25 @@ final class CornucopiaStreamsTests: XCTestCase, StreamDelegate {
     var didSend = false
     var didReceiveResult = false
 
-    func testTCP() {
+    func testTCP() async throws {
 
         print("thread: \(Thread.current)")
-        let lock = NSLock()
-        lock.lock()
-        let url = URL(string: "tcp://192.168.0.10:35000")!
-        var inputs: InputStream? = nil
-        var outputs: OutputStream? = nil
-        Stream.CC_getStreamPair(to: url) { result in
-            guard case let .success(streams) = result else { fatalError() }
-            lock.unlock()
-            inputs = streams.0
-            outputs = streams.1
-        }
-        lock.lock()
+        let url = URL(string: "tcp://localhost:35000")!
+
+        let streams = try await Stream.CC_getStreamPair(to: url)
+        let inputs: InputStream = streams.0
+        let outputs: OutputStream = streams.1
 
         #if !canImport(FoundationNetworking)
         // on Darwin-systems, the streams must be scheduled in a runloop, otherwise no transmission will occur
-        inputs!.schedule(in: RunLoop.main, forMode: .common)
-        outputs!.schedule(in: RunLoop.main, forMode: .common)
+        inputs.schedule(in: RunLoop.main, forMode: .common)
+        outputs.schedule(in: RunLoop.main, forMode: .common)
         #endif
 
-        inputs!.delegate = self
-        outputs!.delegate = self
-        inputs!.open()
-        outputs!.open()
-
-        Thread.sleep(forTimeInterval: 1)
+        inputs.delegate = self
+        outputs.delegate = self
+        inputs.open()
+        outputs.open()
 
         while !self.didReceiveResult {
             RunLoop.main.run(until: Date() + 1)
@@ -46,6 +37,7 @@ final class CornucopiaStreamsTests: XCTestCase, StreamDelegate {
 
         if stream is OutputStream && event == .hasSpaceAvailable && !didSend {
             didSend = true
+            print("DidSend 'ATI\\r'")
             (stream as! OutputStream).write("ATI\r", maxLength: 4)
         }
 
