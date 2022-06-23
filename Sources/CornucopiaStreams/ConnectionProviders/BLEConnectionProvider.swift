@@ -7,7 +7,7 @@ import CoreBluetooth
 
 public extension Stream {
 
-    /// Handling a connection to a Bluetooth Low Energy peripheral.
+    /// Handles a connection to a Bluetooth Low Energy peripheral.
     class BLEConnection: Connection {
 
         static let forbiddenCharsetCBUUID4 = CharacterSet(charactersIn: "0123456789ABCDEF").inverted
@@ -38,11 +38,13 @@ public extension Stream {
                     return self.failWith(error: .invalidParameters)
             }
 
-            self.accessoryManager = BLEAccessoryManager(uuid: self.uuid, peer: self.peer) { result in
+            let psm: CBL2CAPPSM? = self.url.port != nil ? CBL2CAPPSM(Int(self.url.port!)) : nil
+
+            self.accessoryManager = BLEAccessoryManager(uuid: self.uuid, peer: self.peer, psm: psm) { result in
                 switch result {
                     case .success(let streams):
                         self.meta.name = streams.peripheral.name ?? ""
-                        self.succeedWith(istream: streams.inputStream, ostream: streams.outputStream)
+                        self.succeedWith(istream: streams.theInputStream, ostream: streams.theOutputStream)
                     case .failure(let error):
                         self.failWith(error: error)
                 }
