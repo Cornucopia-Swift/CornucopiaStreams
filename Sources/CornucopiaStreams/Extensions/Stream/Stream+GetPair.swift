@@ -12,6 +12,7 @@ public extension Stream {
         case timeout
         case unknownScheme
         case unableToConnect
+        case unableToOpenChannel
     }
 
     typealias Pair = (InputStream, OutputStream)

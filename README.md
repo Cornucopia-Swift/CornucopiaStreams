@@ -7,7 +7,12 @@ _:shell: The "horn of plenty" – a symbol of abundance._
 
 ### Introduction
 
-This library provides a convenient and extensible way to get an I/O stream pair to an URL – supporting various schemes, such as TCP, TTY, BLE, and EA.
+This library provides a convenient and extensible way to get an I/O stream pair to an URL – supporting various schemes, such as:
+
+- TCP (TCP stream)
+- TTY (TTY stream)
+- BLE (Bluetooth Low Energy connection, either via serial emulation on top of characteristics, or L2CAP connection oriented channel), and
+- EA (External Accessory streams).
 
 `Foundation` comes with `getStreamsToHost(withName:port:inputStream:outputStream:)`,
 which is clumsy to use and limited to TCP. `CornucopiaStreams` adds support for communicating with TTYs, external accessories
@@ -85,6 +90,20 @@ Open a connection to the BLE device `E32E4466-A24A-E46B-EE79-436569D6FC6D` that 
 import CornucopiaStreams
 
 let url = URL(string: "ble://FFF0/E32E4466-A24A-E46B-EE79-436569D6FC6D")!
+let streams = try await Stream.CC_getStreamPair(to: url)
+… do something with the streams …
+```
+
+Since version 0.9.7, you can open an L2CAP stream connection. Do this by supplying the PSM (Protocol Service Multiplexor)
+as the "port number".
+
+Open a connection to the BLE device `E32E4466-A24A-E46B-EE79-436569D6FC6D` that provides service `FFF0` and open an L2CAP
+stream for the PSM `0x80` (128):
+
+```swift
+import CornucopiaStreams
+
+let url = URL(string: "ble://FFF0:128/E32E4466-A24A-E46B-EE79-436569D6FC6D")!
 let streams = try await Stream.CC_getStreamPair(to: url)
 … do something with the streams …
 ```

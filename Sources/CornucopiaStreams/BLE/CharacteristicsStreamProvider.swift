@@ -8,12 +8,16 @@ import os.log
 fileprivate let log = OSLog(subsystem: "de.vanille.Cornucopia.Streams", category: "CharacteristicsStreamProvider")
 
 /// Managing the input/output stream pair for a `CBPeripheral`.
-public class CharacteristicsStreamProvider: NSObject, CBPeripheralDelegate {
+public class CharacteristicsStreamProvider: NSObject, BLEStreamProvider, CBPeripheralDelegate {
 
-    let peripheral: CBPeripheral
-    let service: CBService
-    public let inputStream: CharacteristicInputStream!
-    public let outputStream: CharacteristicOutputStream!
+    let service: CBService?
+    let channel: CBL2CAPChannel? = nil
+    let inputStream: CharacteristicInputStream!
+    let outputStream: CharacteristicOutputStream!
+
+    public let peripheral: CBPeripheral
+    public var theInputStream: InputStream { self.inputStream as InputStream }
+    public var theOutputStream: OutputStream { self.outputStream as OutputStream }
 
     /// Create the stream pair for the first applicable `CBCharacteristic` in the specified `CBService`.
     public init(forService service: CBService) {
