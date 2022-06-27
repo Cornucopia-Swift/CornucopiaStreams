@@ -11,7 +11,8 @@ This library provides a convenient and extensible way to get an I/O stream pair 
 
 - TCP (TCP stream)
 - TTY (TTY stream)
-- BLE (Bluetooth Low Energy connection, either via serial emulation on top of characteristics, or L2CAP connection oriented channel), and
+- BLE w/ a serial emulation using one or two characteristics
+- BLE w/ a L2CAP connection oriented channel, and
 - EA (External Accessory streams).
 
 `Foundation` comes with `getStreamsToHost(withName:port:inputStream:outputStream:)`,
@@ -28,6 +29,18 @@ Open a connection to a TTY:
 import CornucopiaStreams
 
 let url = URL(string: "tty:///dev/cu.serial-123456")!
+Stream.CC_getStreamPair(to: url) { result in
+    guard case .success(let (inputStream, outputStream)) = result else { fatalError() }
+    … do something with the streams …
+}
+```
+
+If you need the tty to be configured to a specific bitrate, supply this as the "port number", e.g. like that:
+
+```swift
+import CornucopiaStreams
+
+let url = URL(string: "tty://adapter:19200/dev/cu.serial-123456")!
 Stream.CC_getStreamPair(to: url) { result in
     guard case .success(let (inputStream, outputStream)) = result else { fatalError() }
     … do something with the streams …
@@ -124,7 +137,7 @@ Before the big 1.0, this project wants to
 After 1.0, we might tackle additional connection mechanisms, perhaps
 
 - Bluetooth 3.x (rfcomm)?
-- Direct access to L2CAP?
+- Implement BLE on Linux (e.g., using [PureSwift](https://github.com/PureSwift/Bluetooth)?
 - SSL sockets?
 
 ### Contributions
