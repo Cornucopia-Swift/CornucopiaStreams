@@ -5,17 +5,18 @@ on: [push]
 jobs:
   build:
     name: Swift ${{ matrix.swift }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        swift: ["5.6"]
-    runs-on: ${{ matrix.os }}
+        swift: ["5.4.3", "5.2.4"]
     steps:
-      - uses: fwal/setup-swift@2040b795e5c453c3a05fcb8316496afc8a74f192
-        with:
-          swift-version: ${{ matrix.swift }}
-      - uses: actions/checkout@v2
-      - name: Build
-        run: swift build
-      - name: Run tests
-        run: swift test
+    - uses: swift-actions/setup-swift@v1
+      with:
+        swift-version: ${{ matrix.swift }}
+    - name: Get swift version
+      run: swift --version
+    - name: Build
+      run: swift build
+    - name: Run tests
+      run: swift test
