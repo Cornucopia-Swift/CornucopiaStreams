@@ -1,6 +1,7 @@
 //
 //  Cornucopia – (C) Dr. Lauer Information Technology
 //
+import CornucopiaCore
 import Foundation
 
 public extension Stream {
@@ -127,7 +128,9 @@ public extension Stream {
 
 internal extension Stream {
 
+    @Cornucopia.Core.Protected
     static var CC_pendingConnections: [URL: Connection] = [:]
+    @Cornucopia.Core.Protected
     static var CC_activeConnections: [URL: Connection] = [:]
 
     static var connectionProviders: [String: Stream.ConnectionProvider] = {
