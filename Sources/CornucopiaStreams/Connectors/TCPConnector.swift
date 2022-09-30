@@ -6,7 +6,7 @@ import Foundation
 extension Cornucopia.Streams {
 
     /// A connector for TCP.
-    class TCPConnector: Connector {
+    class TCPConnector: BaseConnector {
 
         func connect(to url: URL) async throws -> Cornucopia.Streams.StreamPair {
 
@@ -17,10 +17,6 @@ extension Cornucopia.Streams {
                 throw Error.unableToConnect("Can't connect via TCP to \(host):\(port)")
             }
             return (istream, ostream)
-        }
-
-        func cancel() {
-            // Nothing to do, since connect works synchronously.
         }
 
 #if DEBUG

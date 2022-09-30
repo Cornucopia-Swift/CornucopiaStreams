@@ -6,8 +6,10 @@ import Foundation
 /// Describes a transport connector protocol.
 protocol _CornucopiaTransportConnector {
 
-    /// Opens the connection to the specified ``URL``.
-    func connect(to url: URL) async throws -> Cornucopia.Streams.StreamPair
+    /// Creates a connector for connecting to the specified ``URL``.
+    init(url: URL)
+    /// Connects and returns a stream pair.
+    func connect() async throws -> Cornucopia.Streams.StreamPair
     /// Cancels this connection, if possible.
     func cancel()
 }

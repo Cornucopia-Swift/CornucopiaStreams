@@ -11,7 +11,7 @@ fileprivate let log = OSLog(subsystem: "BLEConnection", category: "ConnectionHan
 extension Cornucopia.Streams {
 
     /// A connector for Bluetooth Low Energy devices.
-    class BLEConnector: NSObject, Connector {
+    class BLEConnector: BaseConnector {
 
         static let forbiddenCharsetCBUUID4 = CharacterSet(charactersIn: "0123456789ABCDEF").inverted
         static let forbiddenCharsetCBUUID6 = CharacterSet(charactersIn: "0123456789ABCDEF-").inverted
@@ -28,8 +28,9 @@ extension Cornucopia.Streams {
         var peripherals: [UUID: CBPeripheral] = [:]
         var peripheral: CBPeripheral? = nil
 
-        func connect(to url: URL) async throws -> Cornucopia.Streams.StreamPair {
+        override func connect() async throws -> Cornucopia.Streams.StreamPair {
 
+            let url = self.meta.url
             guard let serviceUUID = url.host?.uppercased() else { throw Error.invalidUrl }
             if url.path.count == Self.numberOfCharactersForPeerUUID + 1 {
                 let uuidString = String(url.path.dropFirst())
@@ -56,11 +57,6 @@ extension Cornucopia.Streams {
                 self.manager.delegate = self
             }
         }
-
-        func cancel() {
-
-        }
-
 #if DEBUG
         deinit {
             print("\(self) destroyed")
@@ -148,6 +144,7 @@ extension Cornucopia.Streams.BLEConnector: CBPeripheralDelegate {
         let bridge = BLEBridge(forService: service, manager: self.manager)
         let inputStream = BLECharacteristicInputStream(with: rc, bridge: bridge)
         let outputStream = BLECharacteristicOutputStream(with: wc, bridge: bridge)
+        self.installMetaData(for: peripheral, inputStream: inputStream, outputStream: outputStream)
         continuation.resume(returning: (inputStream, outputStream))
         self.continuation = nil
     }
@@ -179,7 +176,17 @@ extension Cornucopia.Streams.BLEConnector: CBPeripheralDelegate {
         self.peripherals.removeAll()
         self.peripheral = peripheral
 
+        self.installMetaData(for: peripheral, inputStream: inputStream, outputStream: outputStream)
         continuation.resume(returning: (inputStream, outputStream))
         self.continuation = nil
+    }
+}
+
+private extension Cornucopia.Streams.BLEConnector {
+
+    func installMetaData(for peripheral: CBPeripheral, inputStream: InputStream, outputStream: OutputStream) {
+        self.meta.name = peripheral.name ?? peripheral.identifier.uuidString
+        inputStream.CC_storeMeta(self.meta)
+        outputStream.CC_storeMeta(self.meta)
     }
 }

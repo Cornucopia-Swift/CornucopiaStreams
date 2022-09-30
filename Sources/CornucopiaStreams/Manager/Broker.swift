@@ -26,16 +26,16 @@ public extension Cornucopia.Streams {
 
 #if canImport(ExternalAccessory)
                 case "ea":
-                    connector = EAConnector()
+                    connector = EAConnector(url: url)
 #endif
 #if canImport(CoreBluetooth)
                 case "ble":
-                    connector = BLEConnector()
+                    connector = BLEConnector(url: url)
 #endif
                 case "tty":
-                    connector = TTYConnector()
+                    connector = TTYConnector(url: url)
                 case "tcp":
-                    connector = TCPConnector()
+                    connector = TCPConnector(url: url)
 
                 default:
                     throw Error.unsupportedScheme(scheme)
@@ -47,7 +47,7 @@ public extension Cornucopia.Streams {
             return try await withTaskCancellationHandler {
                 connector.cancel()
             } operation: {
-                try await connector.connect(to: url)
+                try await connector.connect()
             }
         }
     }

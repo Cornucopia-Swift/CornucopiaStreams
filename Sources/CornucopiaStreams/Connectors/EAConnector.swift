@@ -11,7 +11,7 @@ fileprivate let log = OSLog(subsystem: "EAConnection", category: "ConnectionHand
 extension Cornucopia.Streams {
 
     /// A connector for MFi-program compliant devices external accessories.
-    class EAConnector: Connector {
+    class EAConnector: BaseConnector {
 
         private static var didStartListeningForNotifications: Bool = false
 
@@ -20,8 +20,9 @@ extension Cornucopia.Streams {
         var proto: String?
 
         /// Connect
-        func connect(to url: URL) async throws -> StreamPair {
+        override func connect() async throws -> StreamPair {
 
+            let url = self.meta.url
             guard let proto = url.host else { throw Error.invalidUrl }
             if let connectedAccessory = try EAAccessoryManager.shared().CC_connectedAccessoryForProtocol(proto) {
                 guard let inputStream = EAInputStreamProxy(accessory: connectedAccessory, forProtocol: proto) else {
@@ -30,6 +31,7 @@ extension Cornucopia.Streams {
                 guard let outputStream = inputStream.session.outputStream else {
                     throw Error.unableToConnect("EASession output stream is nil")
                 }
+                self.installMetaData(for: connectedAccessory, inputStream: inputStream, outputStream: outputStream)
                 return (inputStream, outputStream)
             }
 
@@ -45,7 +47,7 @@ extension Cornucopia.Streams {
         }
 
         /// Cancel
-        func cancel() {
+        override func cancel() {
             guard let continuation = self.continuation else {
                 os_log("Ignoring cancellation request without continuation", log: log)
                 return
@@ -75,6 +77,7 @@ extension Cornucopia.Streams {
                 self.proto = nil
                 return
             }
+            self.installMetaData(for: connectedAccessory, inputStream: inputStream, outputStream: outputStream)
             continuation.resume(returning: (inputStream, outputStream))
             self.continuation = nil
             self.proto = nil
@@ -87,4 +90,19 @@ extension Cornucopia.Streams {
         #endif
     }
 }
+
+private extension Cornucopia.Streams.EAConnector {
+
+    func installMetaData(for accessory: EAAccessory, inputStream: InputStream, outputStream: OutputStream) {
+        self.meta.name = accessory.name
+        self.meta.manufacturer = accessory.manufacturer
+        self.meta.model = accessory.modelNumber
+        self.meta.serialNumber = "\(accessory.serialNumber) \(accessory.hardwareRevision)"
+        self.meta.version = accessory.firmwareRevision
+        inputStream.CC_storeMeta(self.meta)
+        outputStream.CC_storeMeta(self.meta)
+    }
+}
+
 #endif
+
