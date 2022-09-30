@@ -18,8 +18,6 @@ class TTYInputStreamProxy: ProxyInputStream {
     }
 
     override func open() {
-        super.open()
-
         guard let bitrate = self.bitrate else { return }
         let fd = Foundation.open(self.path, O_RDWR | O_NONBLOCK)
         guard fd >= 0 else {
@@ -32,13 +30,17 @@ class TTYInputStreamProxy: ProxyInputStream {
         // macOS resets the baudrate when the filedescriptor closes, hence we need to carry it around until the connection ends.
         self.fd = fd
         var settings = termios()
+        _ = tcgetattr(fd, &settings)
         if 0 == cfsetspeed(&settings, speed_t(bitrate)) {
-            _ = tcsetattr(fd, TCSANOW, &settings)
+            _ = tcsetattr(fd, TCSAFLUSH, &settings)
         }
+
+        super.open()
     }
 
     override func close() {
         super.close()
+
         guard let fd = self.fd else { return }
         Foundation.close(fd)
     }
