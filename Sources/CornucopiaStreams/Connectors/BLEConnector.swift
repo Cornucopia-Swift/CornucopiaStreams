@@ -2,6 +2,7 @@
 //  Cornucopia – (C) Dr. Lauer Information Technology
 //
 #if canImport(CoreBluetooth)
+import CornucopiaCore
 import CoreBluetooth
 import OSLog
 import Foundation

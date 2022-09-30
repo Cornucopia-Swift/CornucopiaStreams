@@ -20,6 +20,7 @@ let package = Package(
         ),
     ],
     dependencies: [
+        .package(url: "https://github.com/Cornucopia-Swift/CornucopiaCore", branch: "master"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -28,7 +29,8 @@ let package = Package(
         .target(
             name: "CornucopiaStreams",
             dependencies: [
-                "CSocketHelper"
+                "CSocketHelper",
+                "CornucopiaCore",
             ]
         ),
         .testTarget(

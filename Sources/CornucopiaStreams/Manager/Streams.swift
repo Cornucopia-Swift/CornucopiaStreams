@@ -1,10 +1,12 @@
 //
 //  Cornucopia – (C) Dr. Lauer Information Technology
 //
+import CornucopiaCore
 import Foundation
 
-@frozen public enum Cornucopia {
-    @frozen public enum Streams {
+public extension Cornucopia {
+
+    enum Streams {
 
         /// A bundle of an ``InputStream`` and an ``OutputStream``.
         public typealias StreamPair = (input: InputStream, output: OutputStream)

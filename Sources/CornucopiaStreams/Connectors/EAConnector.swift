@@ -2,9 +2,10 @@
 //  Cornucopia – (C) Dr. Lauer Information Technology
 //
 #if canImport(ExternalAccessory)
+import CornucopiaCore
 import ExternalAccessory
-import OSLog
 import Foundation
+import OSLog
 
 fileprivate let log = OSLog(subsystem: "EAConnection", category: "ConnectionHandling")
 

@@ -1,6 +1,7 @@
 //
 //  Cornucopia – (C) Dr. Lauer Information Technology
 //
+import CornucopiaCore
 import Foundation
 
 extension Cornucopia.Streams {
