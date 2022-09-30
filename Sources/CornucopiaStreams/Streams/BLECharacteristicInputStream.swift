@@ -4,10 +4,11 @@
 #if canImport(CoreBluetooth)
 import CoreBluetooth
 
-public class CharacteristicInputStream: InputStream {
+public class BLECharacteristicInputStream: InputStream {
 
     fileprivate var incoming = Data()
     public let characteristic: CBCharacteristic
+    public let bridge: BLEBridge
 
     public override var streamStatus: Stream.Status { self.status }
     public override var delegate: StreamDelegate? {
@@ -15,12 +16,14 @@ public class CharacteristicInputStream: InputStream {
         get { self.delega }
     }
     private var status: Stream.Status = .notOpen
-    private var delega: StreamDelegate? = nil
+    private weak var delega: StreamDelegate? = nil
     private weak var runLoop: RunLoop?
 
-    init(with characteristic: CBCharacteristic) {
+    init(with characteristic: CBCharacteristic, bridge: BLEBridge) {
         self.characteristic = characteristic
+        self.bridge = bridge
         super.init(data: Data())
+        bridge.inputStream = self
     }
 
     public override func open() {
@@ -57,9 +60,15 @@ public class CharacteristicInputStream: InputStream {
     public override func getBuffer(_ buffer: UnsafeMutablePointer<UnsafeMutablePointer<UInt8>?>, length len: UnsafeMutablePointer<Int>) -> Bool { false }
     public override func schedule(in aRunLoop: RunLoop, forMode mode: RunLoop.Mode) { self.runLoop = aRunLoop }
     public override func remove(from aRunLoop: RunLoop, forMode mode: RunLoop.Mode) { self.runLoop = nil }
+
+#if DEBUG
+    deinit {
+        print("\(self) destroyed")
+    }
+#endif
 }
 
-internal extension CharacteristicInputStream {
+internal extension BLECharacteristicInputStream {
 
     func bleSubscriptionCompleted(error: Error?) {
         guard error == nil else {
@@ -88,7 +97,7 @@ internal extension CharacteristicInputStream {
     }
 }
 
-private extension CharacteristicInputStream {
+private extension BLECharacteristicInputStream {
 
     func reportDelegateEvent(_ event: Stream.Event) {
         guard let runloop = self.runLoop else {

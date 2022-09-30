@@ -6,9 +6,11 @@ import CoreBluetooth
 import os.log
 
 /// An `OutputStream` bridging to a BLE characteristic.
-public class CharacteristicOutputStream: OutputStream {
+public class BLECharacteristicOutputStream: OutputStream {
 
     public let characteristic: CBCharacteristic
+    public let bridge: BLEBridge
+    
     public override var streamStatus: Stream.Status { self.status }
     public override var delegate: StreamDelegate? {
         set { self.delega = newValue }
@@ -16,13 +18,15 @@ public class CharacteristicOutputStream: OutputStream {
     }
 
     private var status: Stream.Status = .notOpen
-    private var delega: StreamDelegate? = nil
+    private weak var delega: StreamDelegate? = nil
     private weak var runLoop: RunLoop?
     private var didOutputWriteTypeWarning: Bool = false
 
-    init(with characteristic: CBCharacteristic) {
+    init(with characteristic: CBCharacteristic, bridge: BLEBridge) {
         self.characteristic = characteristic
+        self.bridge = bridge
         super.init(toMemory: ())
+        bridge.outputStream = self
     }
 
     /// Open the stream.
@@ -73,9 +77,15 @@ public class CharacteristicOutputStream: OutputStream {
     public override var hasSpaceAvailable: Bool { self.status == .open }
     public override func schedule(in aRunLoop: RunLoop, forMode mode: RunLoop.Mode) { self.runLoop = aRunLoop }
     public override func remove(from aRunLoop: RunLoop, forMode mode: RunLoop.Mode) { self.runLoop = nil }
+
+#if DEBUG
+    deinit {
+        print("\(self) destroyed")
+    }
+#endif
 }
 
-internal extension CharacteristicOutputStream {
+internal extension BLECharacteristicOutputStream {
 
     func bleWriteCompleted() {
         self.reportDelegateEvent(.hasSpaceAvailable)
@@ -86,7 +96,7 @@ internal extension CharacteristicOutputStream {
     }
 }
 
-private extension CharacteristicOutputStream {
+private extension BLECharacteristicOutputStream {
 
     func reportDelegateEvent(_ event: Stream.Event) {
         guard let runloop = self.runLoop else {

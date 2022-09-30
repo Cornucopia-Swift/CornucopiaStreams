@@ -1,4 +1,6 @@
-// swift-tools-version:5.4
+// swift-tools-version: 5.7
+// The swift-tools-version declares the minimum version of Swift required to build this package.
+
 import PackageDescription
 
 let package = Package(
@@ -8,23 +10,29 @@ let package = Package(
         .iOS("15"),
         .tvOS("15"),
         .watchOS("8"),
+        // Linux
     ],
     products: [
+        // Products define the executables and libraries a package produces, and make them visible to other packages.
         .library(
             name: "CornucopiaStreams",
-            targets: ["CornucopiaStreams"]),
+            targets: ["CornucopiaStreams"]
+        ),
     ],
     dependencies: [
-        .package(url: "https://github.com/Cornucopia-Swift/CornucopiaCore", .upToNextMajor(from: "0.4.0")),
     ],
     targets: [
+        // Targets are the basic building blocks of a package. A target can define a module or a test suite.
+        // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(name: "CSocketHelper"),
-        .target(name: "CornucopiaStreams",
-                dependencies: [
-                    "CSocketHelper",
-                    "CornucopiaCore",
-                ]
+        .target(
+            name: "CornucopiaStreams",
+            dependencies: [
+                "CSocketHelper"
+            ]
         ),
-        .testTarget(name: "CornucopiaStreamsTests", dependencies: ["CornucopiaStreams"]),
+        .testTarget(
+            name: "CornucopiaStreamsTests",
+            dependencies: ["CornucopiaStreams"]),
     ]
 )

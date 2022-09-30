@@ -1,5 +1,5 @@
 //
-//  (C) Dr. Michael 'Mickey' Lauer <mickey@vanille-media.de>
+//  Cornucopia – (C) Dr. Lauer Information Technology
 //
 import Foundation
 #if canImport(ObjectiveC)
@@ -11,6 +11,7 @@ import Glibc
 public let posix_read  = Glibc.read
 #endif
 
+/// An InputStream that deals with the FileHandle abstraction.
 class FileHandleInputStream: InputStream {
 
     private let fileHandle: FileHandle
@@ -92,6 +93,7 @@ class FileHandleInputStream: InputStream {
     }
 
     override func close() {
+        try? self.fileHandle.close()
         self._streamStatus = .closed
     }
 

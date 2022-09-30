@@ -1,8 +1,9 @@
 //
-//  (C) Dr. Michael 'Mickey' Lauer <mickey@vanille-media.de>
+//  Cornucopia – (C) Dr. Lauer Information Technology
 //
 import Foundation
 
+/// An OutputStream that deals with the FileHandle abstraction.
 class FileHandleOutputStream: OutputStream {
 
     private let fileHandle: FileHandle
@@ -54,6 +55,7 @@ class FileHandleOutputStream: OutputStream {
     }
 
     override func close() {
+        try? self.fileHandle.close()
         self._streamStatus = .closed
     }
 

@@ -1,138 +1,91 @@
-### CornucopiaStreams
+### CornucopiaTransport
 
 _:shell: The "horn of plenty" – a symbol of abundance._
 
 [![SwiftPM](https://img.shields.io/badge/SPM-Linux%20%7C%20iOS%20%7C%20macOS%20%7C%20watchOS%20%7C%20tvOS-success?logo=swift)](https://swift.org)
-[![Swift](https://github.com/Cornucopia-Swift/CornucopiaStreams/workflows/Swift/badge.svg)](https://github.com/Cornucopia-Swift/CornucopiaStreams/actions?query=workflow%3ASwift)
+[![Swift](https://github.com/Cornucopia-Swift/CornucopiaTransport/workflows/Swift/badge.svg)](https://github.com/Cornucopia-Swift/CornucopiaTransport/actions?query=workflow%3ASwift)
 
 ### Introduction
 
-This library provides a convenient and extensible way to get an I/O stream pair to an URL – supporting various schemes, such as:
+This library is a stream-based transport broker. It provides a convenient and extensible way to get an I/O stream pair to an URL – supporting various schemes, such as:
 
-- TCP (TCP stream)
-- TTY (TTY stream)
-- BLE w/ a serial emulation using one or two characteristics
-- BLE w/ a L2CAP connection oriented channel, and
-- EA (External Accessory streams).
+- `tcp`: A TCP stream.
+- `tty`: A TTY/USB-Serial stream.
+- `ble`: Bluetooth Low Energy ­– either as serial emulation over one or two characteristics or via an L2CAP connection oriented channel.
+- `ea`: MFi External Accessory streams.
 
 `Foundation` comes with `getStreamsToHost(withName:port:inputStream:outputStream:)`,
-which is clumsy to use and limited to TCP. `CornucopiaStreams` adds support for communicating with TTYs, external accessories
+which is clumsy to use and limited to TCP on Apple ­– for other platforms, [swift-corelibs-foundation](https://github.com/apple/swift-corelibs-foundation)
+is missing the whole infrastructure for network transfer.
+`CornucopiaTransport` retrofits that support and adds the necessary glue code to support communicating with TTYs, external accessories
 (using the `ExternalAccessory` framework), and Bluetooth Low Energy (BLE) devices (using the `CoreBluetooth` framework).
 
-On non-Apple-platforms, only TCP and TTY are supported, as both `ExternalAccessory` and `CoreBluetooth` are private Apple frameworks – it might be interesting to evaluate [BluetoothLinux](https://github.com/PureSwift/BluetoothLinux).
+On non-Apple-platforms there is no support for BLE and EA, since both `ExternalAccessory` and `CoreBluetooth` are Apple's closed-source frameworks.
+That said, it might be interesting to evaluate [BluetoothLinux](https://github.com/PureSwift/BluetoothLinux).
+
+With the exception of BLE (where we have to do the actual bridging), the major purpose of this library is to aid setting up the stream connections. Once the connection phase is over, it does not keep track about the further state, hence you can close your streams whenever you like without having to notify `CornucopiaTransport`.
 
 ### Usage
 
-Open a connection to a TTY:
+The usage is the same for all kinds of URLs. Let's assume you want to open a TTY:
 
 ```swift
-import CornucopiaStreams
+import CornucopiaTransport
 
 let url = URL(string: "tty:///dev/cu.serial-123456")!
-Stream.CC_getStreamPair(to: url) { result in
-    guard case .success(let (inputStream, outputStream)) = result else { fatalError() }
-    … do something with the streams …
-}
+let streams = try await Cornucopia.Transport.connect(url)
+… do something with the streams …
 ```
 
-If you need the tty to be configured to a specific bitrate, supply this as the "port number", e.g. like that:
+Following are URL examples for all the supported URL schemes:
 
-```swift
-import CornucopiaStreams
+#### TTY
 
-let url = URL(string: "tty://adapter:19200/dev/cu.serial-123456")!
-Stream.CC_getStreamPair(to: url) { result in
-    guard case .success(let (inputStream, outputStream)) = result else { fatalError() }
-    … do something with the streams …
-}
+`tty://adapter:19200/dev/cu.serial-123456`
+
+- Scheme: `tty`
+- Host: *ignored*
+- Port: Bitrate (optional)
+- Path: Filepath
+
+#### TCP
+
+`tcp://192.168.0.10:35000`
+
+- Scheme: `tcp`
+- Host: Hostname
+- Port: Port
+- Path: *ignored*
+
+#### External Accessory
+
+`ea://com.obdlink`
+
+- Scheme: `ea`
+- Host: External Accessory Protocol. Note that this needs to match the content of the `UISupportedExternalAccessoryProtocols` key in your `Info.plist`.
+- Port: *ignored*
+- Path: *ignored*
+
+#### BLE (Serial-over-Characteristics / L2CAP)
+
+```
+ble://FFF0
+ble://FFF0/E32E4466-A24A-E46B-EE79-436569D6FC6D
+ble://FFF0:128/E32E4466-A24A-E46B-EE79-436569D6FC6D
 ```
 
-Open a connection to a TCP host:
-
-```swift
-import CornucopiaStreams
-
-let url = URL(string: "tcp://192.168.0.10:35000")!
-Stream.CC_getStreamPair(to: url) { result in
-    guard case .success(let (inputStream, outputStream)) = result else { fatalError() }
-    … do something with the streams …
-}
-```
-
-Open a connection to an external accessory:
-
-```swift
-import CornucopiaStreams
-
-let url = URL(string: "ea://com.obdlink")!
-Stream.CC_getStreamPair(to: url) { result in
-    guard case .success(let (inputStream, outputStream)) = result else { fatalError() }
-    … do something with the streams …
-}
-```
-
-Open a connection to a BLE device providing service `FFF0`:
-
-```swift
-import CornucopiaStreams
-
-let url = URL(string: "ble://FFF0")!
-Stream.CC_getStreamPair(to: url) { result in
-    guard case .success(let (inputStream, outputStream)) = result else { fatalError() }
-    … do something with the streams …
-}
-```
-
-Open a connection to the BLE device `E32E4466-A24A-E46B-EE79-436569D6FC6D` that provides service `FFF0`:
-
-```swift
-import CornucopiaStreams
-
-let url = URL(string: "ble://FFF0/E32E4466-A24A-E46B-EE79-436569D6FC6D")!
-Stream.CC_getStreamPair(to: url) { result in
-    guard case .success(let (inputStream, outputStream)) = result else { fatalError() }
-    … do something with the streams …
-}
-```
-
-Since version 0.9.3, you can alternatively use an `async` call to connect to a stream:
-
-Open a connection to the BLE device `E32E4466-A24A-E46B-EE79-436569D6FC6D` that provides service `FFF0`:
-
-```swift
-import CornucopiaStreams
-
-let url = URL(string: "ble://FFF0/E32E4466-A24A-E46B-EE79-436569D6FC6D")!
-let streams = try await Stream.CC_getStreamPair(to: url)
-… do something with the streams …
-```
-
-Since version 0.9.7, you can open an L2CAP stream connection. Do this by supplying the PSM (Protocol Service Multiplexor)
-as the "port number".
-
-Open a connection to the BLE device `E32E4466-A24A-E46B-EE79-436569D6FC6D` that provides service `FFF0` and open an L2CAP
-stream for the PSM `0x80` (128):
-
-```swift
-import CornucopiaStreams
-
-let url = URL(string: "ble://FFF0:128/E32E4466-A24A-E46B-EE79-436569D6FC6D")!
-let streams = try await Stream.CC_getStreamPair(to: url)
-… do something with the streams …
-```
+- Scheme: `ble`
+- Host: Service UUID
+- Port: L2CAP PSM (optional)
+- Path: Device UUID (optional)
 
 #### Metadata
 
 Some of the streams provide metadata, e.g., the `name` for BLE devices, which you can access via the `CC_meta` property.
 
-### Roadmap to 1.0 and beyond
+### Roadmap
 
-Before the big 1.0, this project wants to
-
-- [ ] Provide a comprehensive testsuite.
-- [ ] Support cancelling a pending connection.
-- [ ] Support force-closing an active connection.
-- [ ] Support `Task` cancellation for pending connections.
+Before 1.0, this project needs a comprehensive testsuite.
 
 After 1.0, we might tackle additional connection mechanisms, perhaps
 

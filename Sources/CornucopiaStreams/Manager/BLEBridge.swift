@@ -8,42 +8,33 @@ import os.log
 fileprivate let log = OSLog(subsystem: "de.vanille.Cornucopia.Streams", category: "CharacteristicsStreamProvider")
 
 /// Managing the input/output stream pair for a `CBPeripheral`.
-public class CharacteristicsStreamProvider: NSObject, BLEStreamProvider, CBPeripheralDelegate {
+public class BLEBridge: NSObject {
 
     let service: CBService?
     let channel: CBL2CAPChannel? = nil
-    let inputStream: CharacteristicInputStream!
-    let outputStream: CharacteristicOutputStream!
+    weak var inputStream: BLECharacteristicInputStream!
+    weak var outputStream: BLECharacteristicOutputStream!
 
     public let peripheral: CBPeripheral
-    public var theInputStream: InputStream { self.inputStream as InputStream }
-    public var theOutputStream: OutputStream { self.outputStream as OutputStream }
+    public let manager: CBCentralManager
 
     /// Create the stream pair for the first applicable `CBCharacteristic` in the specified `CBService`.
-    public init(forService service: CBService) {
+    public init(forService service: CBService, manager: CBCentralManager) {
         self.service = service
         self.peripheral = service.peripheral! // fails when gone
-
-        let readCharacteristic = service.characteristics?.first { $0.properties.contains(.notify) || $0.properties.contains(.indicate) }
-        let writeCharacteristic = service.characteristics?.first { $0.properties.contains(.write) || $0.properties.contains(.writeWithoutResponse) }
-
-        guard let input = readCharacteristic else { fatalError("NOTIFY characteristic not found in \(service)") }
-        guard let output = writeCharacteristic else { fatalError("WRITE characteristic not found in \(service)") }
-
-        self.inputStream = CharacteristicInputStream(with: input)
-        self.outputStream = CharacteristicOutputStream(with: output)
-
+        self.manager = manager
         super.init()
-
         peripheral.delegate = self
     }
 
     deinit {
-        self.inputStream.bleDisconnected()
-        self.outputStream.bleDisconnected()
+#if DEBUG
+        print("\(self) destroyed")
+#endif
     }
+}
 
-    //MARK: - <CBPeripheralDelegate>
+extension BLEBridge: CBPeripheralDelegate {
 
     public func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
         guard characteristic == self.inputStream.characteristic else { fatalError() }
