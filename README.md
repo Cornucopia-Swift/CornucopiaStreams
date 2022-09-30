@@ -34,7 +34,49 @@ import CornucopiaTransport
 
 let url = URL(string: "tty:///dev/cu.serial-123456")!
 let streams = try await Cornucopia.Transport.connect(url)
-… do something with the streams …
+… set the delegate on the streams …
+… attach to your preferred runloop …
+… handle stream events in your StreamDelegate …
+```
+
+**Application Note**: For some connection schemes, this library returns _proxy objects_ instead of the actual streams,
+therefore you might receive stream events from objects other than the ones you have been returned.
+If ­– in your `StreamDelegate` ­– you have previously compared the stream event objects to the stored objects,
+you will have to adjust for that, e.g.:
+
+```swift
+public func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
+    assert(self == Thread.current)
+
+    logger.trace("Received stream \(aStream), event \(eventCode) in thread \(self.CC_number)")
+
+    switch (aStream, eventCode) {
+
+        //This will no longer work, since we may have received proxy objects:
+        //case (self.input, .openCompleted):
+        case (is InputStream, .openCompleted):
+            self.delegate?.streamProtocolHandlerInputStreamReady(self.input)
+            self.outputActiveCommand()
+
+        case (is OutputStream, .openCompleted):
+            self.delegate?.streamProtocolHandlerOutputStreamReady(self.output)
+            self.outputActiveCommand()
+
+        case (is OutputStream, .hasSpaceAvailable):
+            self.outputActiveCommand()
+
+        case (is InputStream, .hasBytesAvailable):
+            self.inputActiveCommand()
+
+        case (_, .endEncountered), (_, .errorOccurred):
+            self.handleErrorCondition(stream: aStream, event: eventCode)
+            self.delegate?.streamProtocolHandlerUnexpectedEvent(eventCode, on: aStream)
+
+        default:
+            logger.trace("Unhandled \(aStream): \(eventCode)")
+            break
+    }
+}
 ```
 
 Following are URL examples for all the supported URL schemes:

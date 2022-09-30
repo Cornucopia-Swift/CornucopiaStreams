@@ -8,8 +8,9 @@ extension Cornucopia.Streams {
     /// A connector for TCP.
     class TCPConnector: BaseConnector {
 
-        func connect(to url: URL) async throws -> Cornucopia.Streams.StreamPair {
+        override func connect() async throws -> Cornucopia.Streams.StreamPair {
 
+            let url = self.meta.url
             guard let host = url.host, !host.isEmpty else { throw Error.invalidUrl }
             guard let port = url.port, port > 0 else { throw Error.invalidUrl }
             let (inputStream, outputStream) = Stream.CC_getStreamsToHost(with: host, port: port)
