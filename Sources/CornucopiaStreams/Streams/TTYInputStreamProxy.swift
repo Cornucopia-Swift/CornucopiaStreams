@@ -31,10 +31,17 @@ class TTYInputStreamProxy: ProxyInputStream {
         self.fd = fd
         var settings = termios()
         _ = tcgetattr(fd, &settings)
-        if 0 == cfsetspeed(&settings, speed_t(bitrate)) {
+        var retry = 3
+        // Do the bitrate dance.
+        while retry > 0 && !(settings.c_ispeed == bitrate && settings.c_ospeed == bitrate) {
+            _ = cfsetspeed(&settings, speed_t(bitrate))
             _ = tcsetattr(fd, TCSAFLUSH, &settings)
+            usleep(100000)
+            _ = tcsetattr(fd, TCSANOW, &settings)
+            _ = cfsetspeed(&settings, speed_t(bitrate))
+            _ = tcgetattr(fd, &settings)
+            retry -= 1
         }
-
         super.open()
     }
 
