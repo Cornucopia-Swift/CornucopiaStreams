@@ -65,7 +65,6 @@ extension Cornucopia.Streams {
 #endif
     }
 }
-#endif
 
 extension Cornucopia.Streams.BLEConnector: CBCentralManagerDelegate {
 
@@ -191,3 +190,4 @@ private extension Cornucopia.Streams.BLEConnector {
         outputStream.CC_storeMeta(self.meta)
     }
 }
+#endif
