@@ -9,12 +9,21 @@ import Foundation
 public extension Stream {
 
     @Cornucopia.Core.Protected
-    private static var StreamMetaDict: [Stream: Stream.Meta] = [:]
+    private static var StreamMetaDict: [Int: Stream.Meta] = .init()
 
-    internal func CC_storeMeta(_ meta: Meta) { Self.StreamMetaDict[self] = meta }
-    internal func CC_removeMeta() { Self.StreamMetaDict[self] = nil }
+    internal func CC_storeMeta(_ meta: Meta) {
+        let ptr = CC_memoryAddressOf(self)
+        Self.StreamMetaDict[ptr] = meta
+    }
+    internal func CC_removeMeta() {
+        let ptr = CC_memoryAddressOf(self)
+        Self.StreamMetaDict.removeValue(forKey: ptr)
+    }
 
-    var CC_meta: Meta? { Self.StreamMetaDict[self] }
+    var CC_meta: Meta? {
+        let ptr = CC_memoryAddressOf(self)
+        return Self.StreamMetaDict[ptr]
+    }
 
     final class Meta {
 
