@@ -7,7 +7,7 @@ import ExternalAccessory
 import Foundation
 import OSLog
 
-fileprivate let log = OSLog(subsystem: "EAConnection", category: "ConnectionHandling")
+fileprivate let logger = Cornucopia.Core.Logger()
 
 extension Cornucopia.Streams {
 
@@ -50,7 +50,7 @@ extension Cornucopia.Streams {
         /// Cancel
         override func cancel() {
             guard let continuation = self.continuation else {
-                os_log("Ignoring cancellation request without continuation", log: log)
+                logger.debug("Ignoring cancellation request without continuation")
                 return
             }
             continuation.resume(throwing: Error.connectionCancelled)
@@ -58,11 +58,11 @@ extension Cornucopia.Streams {
 
         @objc private func onEAAccessoryDidConnect(n: Notification) {
             guard let continuation = self.continuation else {
-                os_log("Ignoring connection notification without continuation", log: log)
+                logger.debug("Ignoring connection notification without continuation")
                 return
             }
             guard let proto = self.proto else {
-                os_log("Ignoring connection notification without proto", log: log)
+                logger.debug("Ignoring connection notification without proto")
                 return
             }
             guard let connectedAccessory = try? EAAccessoryManager.shared().CC_connectedAccessoryForProtocol(proto) else { return }
@@ -104,6 +104,4 @@ private extension Cornucopia.Streams.EAConnector {
         outputStream.CC_storeMeta(self.meta)
     }
 }
-
 #endif
-

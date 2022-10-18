@@ -1,9 +1,11 @@
 //
 //  Cornucopia – (C) Dr. Lauer Information Technology
 //
+import CornucopiaCore
 #if canImport(CoreBluetooth)
 import CoreBluetooth
-import os.log
+
+fileprivate let logger = Cornucopia.Core.Logger()
 
 /// An `OutputStream` bridging to a BLE characteristic.
 public class BLECharacteristicOutputStream: OutputStream {
@@ -45,7 +47,7 @@ public class BLECharacteristicOutputStream: OutputStream {
         //NOTE: We always prefer `.withResponse`, since the diagnostics for BLE WRITE_REQUEST are better.
         let writeType: CBCharacteristicWriteType = self.characteristic.properties.contains(.write) ? .withResponse : .withoutResponse
         if writeType != .withResponse && !didOutputWriteTypeWarning {
-            os_log("Using BLE write type WITHOUT response (not recommended)", log: OSLog.default, type: .info)
+            logger.info("Using BLE write type WITHOUT response (not recommended)")
             didOutputWriteTypeWarning = true
         }
         var maxWriteForCharacteristic = peripheral.maximumWriteValueLength(for: writeType)

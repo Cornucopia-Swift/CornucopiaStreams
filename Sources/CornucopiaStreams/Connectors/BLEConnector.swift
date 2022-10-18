@@ -7,7 +7,7 @@ import CoreBluetooth
 import OSLog
 import Foundation
 
-fileprivate let log = OSLog(subsystem: "BLEConnection", category: "ConnectionHandling")
+fileprivate let logger = Cornucopia.Core.Logger()
 
 extension Cornucopia.Streams {
 
@@ -69,7 +69,7 @@ extension Cornucopia.Streams {
 extension Cornucopia.Streams.BLEConnector: CBCentralManagerDelegate {
 
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
-
+        logger.trace("CBCentralManager state now \(central.state)")
         guard case .poweredOn = central.state else { return }
 
         let connectedPeripherals = self.manager.retrieveConnectedPeripherals(withServices: [self.service])
@@ -80,17 +80,20 @@ extension Cornucopia.Streams.BLEConnector: CBCentralManagerDelegate {
     }
 
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
+        logger.trace("CBCentralManager did discover \(peripheral)")
         self.peripherals[peripheral.identifier] = peripheral
         central.connect(peripheral, options: nil)
     }
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+        logger.trace("CBCentralManager did connect \(peripheral)")
         if let peer = self.peer, peripheral.identifier != peer { return }
         peripheral.delegate = self
         peripheral.discoverServices([self.service])
     }
 
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
+        logger.trace("CBCentralManager did disconnect \(peripheral)")
         guard error == nil else {
             self.peripherals.removeValue(forKey: peripheral.identifier)
             return
@@ -137,7 +140,7 @@ extension Cornucopia.Streams.BLEConnector: CBPeripheralDelegate {
         self.peripheral = peripheral
 
         guard let continuation = self.continuation else {
-            os_log("Ignoring successful didDiscoverCharacteristics open without continuation", log: log)
+            logger.debug("Ignoring successful didDiscoverCharacteristics open without continuation")
             return
         }
 
@@ -159,7 +162,7 @@ extension Cornucopia.Streams.BLEConnector: CBPeripheralDelegate {
             return
         }
         guard let continuation = self.continuation else {
-            os_log("Ignoring successful L2CAP channel open without continuation", log: log)
+            logger.debug("Ignoring successful L2CAP channel open without continuation")
             return
         }
         guard let inputStream = channel.inputStream else {

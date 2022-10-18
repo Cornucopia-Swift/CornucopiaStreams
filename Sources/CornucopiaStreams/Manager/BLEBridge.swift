@@ -1,11 +1,11 @@
 //
 //  Cornucopia – (C) Dr. Lauer Information Technology
 //
+import CornucopiaCore
 #if canImport(CoreBluetooth)
 import CoreBluetooth
-import os.log
 
-fileprivate let log = OSLog(subsystem: "de.vanille.Cornucopia.Streams", category: "CharacteristicsStreamProvider")
+fileprivate let logger = Cornucopia.Core.Logger()
 
 /// Managing the input/output stream pair for a `CBPeripheral`.
 public class BLEBridge: NSObject {
@@ -40,23 +40,19 @@ extension BLEBridge: CBPeripheralDelegate {
         guard characteristic == self.inputStream.characteristic else { fatalError() }
         defer { self.inputStream.bleSubscriptionCompleted(error: error) }
         guard error == nil else {
-            os_log("Could not updateNotificationStateForCharacteristic: %@", log: log, type: .error, error! as CVarArg)
+            logger.debug("Could not updateNotificationStateForCharacteristic: \(error!)")
             return
         }
-        #if TRACE
-        os_log("didUpdateNotificationStateForCharacteristic: %@", log: log, type: .debug, characteristic)
-        #endif
+        logger.trace("didUpdateNotificationStateForCharacteristic: \(characteristic)")
     }
 
     public func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
         guard characteristic == self.outputStream.characteristic else { fatalError() }
         guard error == nil else {
-            os_log("Could not writeValueForCharacteristic: %@", log: log, type: .error, error! as CVarArg)
+            logger.debug("Could not writeValueForCharacteristic: \(error!)")
             return
         }
-        #if TRACE
-        os_log("didWriteValueForCharacteristic: %@", log: log, type: .debug, characteristic)
-        #endif
+        logger.trace("didWriteValueForCharacteristic: \(characteristic)")
         self.outputStream.bleWriteCompleted()
     }
 
@@ -64,19 +60,15 @@ extension BLEBridge: CBPeripheralDelegate {
         guard characteristic == self.inputStream.characteristic else { fatalError() }
         defer { self.inputStream.bleReadCompleted(error: error) }
         guard error == nil else {
-            os_log("Could not updateValueForCharacteristic: %@", log: log, type: .error, error! as CVarArg)
+            logger.debug("Could not updateValueForCharacteristic: \(error!)")
             return
         }
-        #if TRACE
-        os_log("didUpdateValueForCharacteristic: %@", log: log, type: .debug, characteristic)
-        #endif
+        logger.trace("didUpdateValueForCharacteristic: \(characteristic)")
     }
 
     public func peripheralIsReady(toSendWriteWithoutResponse peripheral: CBPeripheral) {
         guard peripheral == self.peripheral else { fatalError() }
-        #if TRACE
-        os_log("periperalIsReadyToSendWriteWithoutResponse: %@", log: log, type: .debug, peripheral)
-        #endif
+        logger.trace("periperalIsReadyToSendWriteWithoutResponse: \(peripheral)")
         self.outputStream.bleWriteCompleted()
     }
 }
