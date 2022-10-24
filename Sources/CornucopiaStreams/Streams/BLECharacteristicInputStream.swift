@@ -18,6 +18,7 @@ public class BLECharacteristicInputStream: InputStream {
     private var status: Stream.Status = .notOpen
     private weak var delega: StreamDelegate? = nil
     private weak var runLoop: RunLoop?
+    private var dummySource: CFRunLoopSource? = nil
 
     init(with characteristic: CBCharacteristic, bridge: BLEBridge) {
         self.characteristic = characteristic
@@ -58,8 +59,16 @@ public class BLECharacteristicInputStream: InputStream {
     public override var hasBytesAvailable: Bool { self.status == .open && !self.incoming.isEmpty }
 
     public override func getBuffer(_ buffer: UnsafeMutablePointer<UnsafeMutablePointer<UInt8>?>, length len: UnsafeMutablePointer<Int>) -> Bool { false }
-    public override func schedule(in aRunLoop: RunLoop, forMode mode: RunLoop.Mode) { self.runLoop = aRunLoop }
-    public override func remove(from aRunLoop: RunLoop, forMode mode: RunLoop.Mode) { self.runLoop = nil }
+    public override func schedule(in aRunLoop: RunLoop, forMode mode: RunLoop.Mode) {
+        self.dummySource = CFRunLoopSource.CC_dummy()
+        aRunLoop.CC_addSource(self.dummySource!)
+        self.runLoop = aRunLoop
+    }
+    public override func remove(from aRunLoop: RunLoop, forMode mode: RunLoop.Mode) {
+        self.runLoop = nil
+        aRunLoop.CC_removeSource(self.dummySource!)
+        self.dummySource = nil
+    }
 
 #if DEBUG
     deinit {

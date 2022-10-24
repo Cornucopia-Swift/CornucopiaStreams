@@ -16,6 +16,7 @@ class FileHandleInputStream: InputStream {
 
     private let fileHandle: FileHandle
     private weak var runLoop: RunLoop?
+    private var dummySource: CFRunLoopSource? = nil
 
     private var _streamStatus: Stream.Status  = .notOpen {
         didSet {
@@ -102,11 +103,15 @@ class FileHandleInputStream: InputStream {
     override func property(forKey key: Stream.PropertyKey) -> Any? { nil }
     override func setProperty(_ property: Any?, forKey key: Stream.PropertyKey) -> Bool { false }
     #endif
-    override func schedule(in aRunLoop: RunLoop, forMode mode: RunLoop.Mode) {
+    public override func schedule(in aRunLoop: RunLoop, forMode mode: RunLoop.Mode) {
+        self.dummySource = CFRunLoopSource.CC_dummy()
+        aRunLoop.CC_addSource(self.dummySource!)
         self.runLoop = aRunLoop
     }
-    override func remove(from aRunLoop: RunLoop, forMode mode: RunLoop.Mode) {
+    public override func remove(from aRunLoop: RunLoop, forMode mode: RunLoop.Mode) {
         self.runLoop = nil
+        aRunLoop.CC_removeSource(self.dummySource!)
+        self.dummySource = nil
     }
 }
 
