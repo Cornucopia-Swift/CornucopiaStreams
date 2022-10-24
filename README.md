@@ -1,9 +1,9 @@
-### CornucopiaTransport
+### CornucopiaStreams
 
 _:shell: The "horn of plenty" – a symbol of abundance._
 
 [![SwiftPM](https://img.shields.io/badge/SPM-Linux%20%7C%20iOS%20%7C%20macOS%20%7C%20watchOS%20%7C%20tvOS-success?logo=swift)](https://swift.org)
-[![Swift](https://github.com/Cornucopia-Swift/CornucopiaTransport/workflows/Swift/badge.svg)](https://github.com/Cornucopia-Swift/CornucopiaTransport/actions?query=workflow%3ASwift)
+[![Swift](https://github.com/Cornucopia-Swift/CornucopiaStreams/workflows/Swift/badge.svg)](https://github.com/Cornucopia-Swift/CornucopiaStreams/actions?query=workflow%3ASwift)
 
 ### Introduction
 
@@ -17,23 +17,23 @@ This library is a stream-based transport broker. It provides a convenient and ex
 `Foundation` comes with `getStreamsToHost(withName:port:inputStream:outputStream:)`,
 which is clumsy to use and limited to TCP on Apple ­– for other platforms, [swift-corelibs-foundation](https://github.com/apple/swift-corelibs-foundation)
 is missing the whole infrastructure for network transfer.
-`CornucopiaTransport` retrofits that support and adds the necessary glue code to support communicating with TTYs, external accessories
+`CornucopiaStreams` retrofits that support and adds the necessary glue code to support communicating with TTYs, external accessories
 (using the `ExternalAccessory` framework), and Bluetooth Low Energy (BLE) devices (using the `CoreBluetooth` framework).
 
 On non-Apple-platforms there is no support for BLE and EA, since both `ExternalAccessory` and `CoreBluetooth` are Apple's closed-source frameworks.
 That said, it might be interesting to evaluate [BluetoothLinux](https://github.com/PureSwift/BluetoothLinux).
 
-With the exception of BLE (where we have to do the actual bridging), the major purpose of this library is to aid setting up the stream connections. Once the connection phase is over, it does not keep track about the further state, hence you can close your streams whenever you like without having to notify `CornucopiaTransport`.
+With the exception of BLE (where we have to do the actual bridging), the major purpose of this library is to aid setting up the stream connections. Once the connection phase is over, it does not keep track about the further state, hence you can close your streams whenever you like without having to notify `CornucopiaStreams`.
 
 ### Usage
 
 The usage is the same for all kinds of URLs. Let's assume you want to open a TTY:
 
 ```swift
-import CornucopiaTransport
+import CornucopiaStreams
 
 let url = URL(string: "tty:///dev/cu.serial-123456")!
-let streams = try await Cornucopia.Transport.connect(url)
+let streams = try await Cornucopia.Streams.connect(url)
 … set the delegate on the streams …
 … attach to your preferred runloop …
 … handle stream events in your StreamDelegate …
