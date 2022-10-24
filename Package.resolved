@@ -1,0 +1,50 @@
+{
+  "pins" : [
+    {
+      "identity" : "anycodable",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/mickeyl/AnyCodable",
+      "state" : {
+        "revision" : "bcbafbc461058bda170ca59013ba599b5613e72a",
+        "version" : "0.6.6"
+      }
+    },
+    {
+      "identity" : "bitbytedata",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/tsolomko/BitByteData",
+      "state" : {
+        "revision" : "b4b41619522aacd7aae7b02fa8360833e796a03d",
+        "version" : "2.0.2"
+      }
+    },
+    {
+      "identity" : "cornucopiacore",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Cornucopia-Swift/CornucopiaCore",
+      "state" : {
+        "branch" : "master",
+        "revision" : "65be02641a14e24a5f14142b4f6750d813ed0c66"
+      }
+    },
+    {
+      "identity" : "swcompression",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/tsolomko/SWCompression",
+      "state" : {
+        "revision" : "6fe73cb9a0d2e70a80ec892724ac19b683f398e0",
+        "version" : "4.8.3"
+      }
+    },
+    {
+      "identity" : "swift-crypto",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-crypto",
+      "state" : {
+        "revision" : "ddb07e896a2a8af79512543b1c7eb9797f8898a5",
+        "version" : "1.1.7"
+      }
+    }
+  ],
+  "version" : 2
+}
