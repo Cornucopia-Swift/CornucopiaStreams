@@ -69,7 +69,7 @@ extension BLEBridge: CBPeripheralDelegate {
     public func peripheralIsReady(toSendWriteWithoutResponse peripheral: CBPeripheral) {
         guard peripheral == self.peripheral else { fatalError() }
         logger.trace("periperalIsReadyToSendWriteWithoutResponse: \(peripheral)")
-        self.outputStream.bleWriteCompleted()
+        self.outputStream.bleReadyToWriteWithoutResponse()
     }
 }
 #endif
