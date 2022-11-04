@@ -23,6 +23,7 @@ public class BLECharacteristicOutputStream: OutputStream {
     private weak var delega: StreamDelegate? = nil
     private weak var runLoop: RunLoop?
     private var didOutputWriteTypeWarning: Bool = false
+    private var pendingData: Data? = nil
 
     init(with characteristic: CBCharacteristic, bridge: BLEBridge) {
         self.characteristic = characteristic
@@ -43,31 +44,44 @@ public class BLECharacteristicOutputStream: OutputStream {
     public override func write(_ buffer: UnsafePointer<UInt8>, maxLength len: Int) -> Int {
         guard self.status == .open else { return -1 }
         guard let peripheral = self.characteristic.service?.peripheral else { return -1 }
-
-        //NOTE: We always prefer `.withResponse`, since the diagnostics for BLE WRITE_REQUEST are better.
-        let writeType: CBCharacteristicWriteType = self.characteristic.properties.contains(.write) ? .withResponse : .withoutResponse
-        if writeType != .withResponse && !didOutputWriteTypeWarning {
-            logger.info("Using BLE write type WITHOUT response (not recommended)")
+        guard self.pendingData == nil else { return -1 }
+        // So here's the deal with our preference to .withoutResponse:
+        // While iOS correctly reports the "native" MTU when questing the
+        // `peripheral.maximumWriteValueLength(for: .withoutResponse)`,
+        // it unconditionally(!) returns 512 as the MTU for
+        // `peripheral.maximumWriteValueLength(for: .withResponse)`, which is
+        // the maximum allowed MTU as per the spec. However, for this to work
+        // the device needs to support Queued Writes (see BLE5.0 | Vol 3, Part F,  Section 3.4.6),
+        // which not all BLE 5 devices do (Yes I'm looking at you OBDLink CX).
+        // If you try to use this MTU on a device that does not supported Queued Writes, you
+        // will encounter bytes being dropped and transfers stalling.
+        let writeType: CBCharacteristicWriteType = self.characteristic.properties.contains(.writeWithoutResponse) ? .withoutResponse : .withResponse
+        if writeType == .withResponse && !didOutputWriteTypeWarning {
+            logger.info("Using BLE write type .withResponse (not recommended)")
             didOutputWriteTypeWarning = true
         }
-        var maxWriteForCharacteristic = peripheral.maximumWriteValueLength(for: writeType)
-        //NOTE: Some BLE 5.0 devices (yes, I'm looking to you, OBDLINK CX) calim to support Queued Writes (see BLE5.0 | Vol 3, Part F,  Section 3.4.6),
-        //      which makes CoreBluetooth assume that we can use a pretty high MTU, such as 512. In this case the return values for
-        //      peripheral.maximumWriteValueLength(for: .withResponse) ["BLE 5.0 MTU"] and
-        //      peripheral.maximumWriteValueLength(for: .withoutResponse) ["BLE 4.x MTU"] differ. In reality though, they don't support
-        //      queued writes and thus all attempts to write more than the BLE 4.x MTU leads to lost data.
-        //      To be on the safe side, we _always_ have to take the lower value of both APIs. :-(
-        #if !BLE_5_DEVICES_BEHAVE_CORRECTLY
-        maxWriteForCharacteristic = min(
-            peripheral.maximumWriteValueLength(for: .withResponse),
-            peripheral.maximumWriteValueLength(for: .withoutResponse)
-            )
-        #endif
+        let maxWriteForCharacteristic = peripheral.maximumWriteValueLength(for: writeType)
         let bytesToWrite = min(maxWriteForCharacteristic, len)
         let data = Data(bytes: buffer, count: bytesToWrite)
-        //FIXME: If we're writing without response, we could add a check here to see whether we can actually send before attempting to write
-        peripheral.writeValue(data, for: self.characteristic, type: writeType)
-        return bytesToWrite
+
+        switch writeType {
+            case .withResponse:
+                peripheral.writeValue(data, for: self.characteristic, type: writeType)
+                return bytesToWrite
+
+            case .withoutResponse:
+                if peripheral.canSendWriteWithoutResponse {
+                    peripheral.writeValue(data, for: self.characteristic, type: writeType)
+                    return bytesToWrite
+                } else {
+                    logger.trace("Can not send yet… queuing for later")
+                    self.pendingData = data
+                    return bytesToWrite
+                }
+
+            @unknown default:
+                fatalError("Unexpected write type \(writeType)")
+        }
     }
 
     /// Close the stream.
@@ -88,6 +102,19 @@ public class BLECharacteristicOutputStream: OutputStream {
 }
 
 internal extension BLECharacteristicOutputStream {
+
+    func bleReadyToWriteWithoutResponse() {
+        guard let data = self.pendingData else {
+            self.reportDelegateEvent(.hasSpaceAvailable)
+            return
+        }
+        guard let peripheral = self.characteristic.service?.peripheral else {
+            logger.debug("Got BLE readyToWriteWithoutResponse, but peripheral is already gone")
+            return
+        }
+        defer { self.pendingData = nil }
+        peripheral.writeValue(data, for: self.characteristic, type: .withoutResponse)
+    }
 
     func bleWriteCompleted() {
         self.reportDelegateEvent(.hasSpaceAvailable)
