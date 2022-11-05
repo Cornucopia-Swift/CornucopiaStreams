@@ -14,13 +14,12 @@ let package = Package(
     ],
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
-        .library(
-            name: "CornucopiaStreams",
-            targets: ["CornucopiaStreams"]
-        ),
+        .library(name: "CornucopiaStreams", targets: ["CornucopiaStreams"]),
     ],
     dependencies: [
         .package(url: "https://github.com/Cornucopia-Swift/CornucopiaCore", branch: "master"),
+        // for the executable
+        .package(url: "https://github.com/andybest/linenoise-swift", branch: "master"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -31,6 +30,13 @@ let package = Package(
             dependencies: [
                 "CSocketHelper",
                 "CornucopiaCore",
+            ]
+        ),
+        .executableTarget(
+            name: "streamer",
+            dependencies: [
+                "CornucopiaStreams",
+                .product(name: "LineNoise", package: "linenoise-swift"),
             ]
         ),
         .testTarget(

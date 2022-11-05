@@ -11,16 +11,17 @@ This library is a stream-based transport broker. It provides a convenient and ex
 
 - `tcp`: A TCP stream.
 - `tty`: A TTY/USB-Serial stream.
-- `ble`: Bluetooth Low Energy ­– either as serial emulation over one or two characteristics or via an L2CAP connection oriented channel.
+- `ble`: Bluetooth Low Energy ­– virtual UART via one or two characteristics or using an L2CAP connection oriented channel.
 - `ea`: MFi External Accessory streams.
+- `rfcomm`: Bluetooth Classic RFCOMM virtual UART.
 
-`Foundation` comes with `getStreamsToHost(withName:port:inputStream:outputStream:)`,
-which is clumsy to use and limited to TCP on Apple ­– for other platforms, [swift-corelibs-foundation](https://github.com/apple/swift-corelibs-foundation)
+While `Foundation` comes with `getStreamsToHost(withName:port:inputStream:outputStream:)`,
+(which is clumsy to use and limited to TCP) on Apple's operating systems ­– for other platforms, [swift-corelibs-foundation](https://github.com/apple/swift-corelibs-foundation)
 is missing the whole infrastructure for network transfer.
-`CornucopiaTransport` retrofits that support and adds the necessary glue code to support communicating with TTYs, external accessories
-(using the `ExternalAccessory` framework), and Bluetooth Low Energy (BLE) devices (using the `CoreBluetooth` framework).
+`CornucopiaTransport` retrofits that and adds the necessary glue code to also support communicating with TTYs, external accessories
+(using the `ExternalAccessory` framework), Bluetooth Low Energy (BLE) devices (using the `CoreBluetooth` framework), and Bluetooth Classic devices (using the `IOBluetooth` framework).
 
-On non-Apple-platforms there is no support for BLE and EA, since both `ExternalAccessory` and `CoreBluetooth` are Apple's closed-source frameworks.
+On non-Apple-platforms there is no support for BLE, EA, and RFCOMM, since all of those are using Apple's closed-source frameworks.
 That said, it might be interesting to evaluate [BluetoothLinux](https://github.com/PureSwift/BluetoothLinux).
 
 With the exception of BLE (where we have to do the actual bridging), the major purpose of this library is to aid setting up the stream connections. Once the connection phase is over, it does not keep track about the further state, hence you can close your streams whenever you like without having to notify `CornucopiaTransport`.
@@ -39,7 +40,7 @@ let streams = try await Cornucopia.Transport.connect(url)
 … handle stream events in your StreamDelegate …
 ```
 
-**Application Note**: For some connection schemes, this library returns _proxy objects_ instead of the actual streams,
+**Application Note 1**: For some connection schemes, this library returns _proxy objects_ instead of the actual streams,
 therefore you might receive stream events from objects other than the ones you have been returned.
 If ­– in your `StreamDelegate` ­– you have previously compared the stream event objects to the stored objects,
 you will have to adjust for that, e.g.:
@@ -79,6 +80,9 @@ public func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
 }
 ```
 
+**Application Note 2**: Due to the way the certain connection schemes are implemented (with bridges), most of the core logic
+resides in the input streams. It is therefore important to always open the input stream before opening the output stream.
+
 Following are URL examples for all the supported URL schemes:
 
 #### TTY
@@ -108,6 +112,15 @@ Following are URL examples for all the supported URL schemes:
 - Port: *ignored*
 - Path: *ignored*
 
+#### Bluetooth Classic (RFCOMM)
+
+`rfcomm://00:0a:3a:22:68:73`
+
+- Scheme: `rfcomm`
+- Host: Bluetooth device MAC address.
+- Port: RFCOMM Channel ID (optional)
+- Path: *ignored*
+
 #### BLE (Serial-over-Characteristics / L2CAP)
 
 ```
@@ -131,8 +144,7 @@ Before 1.0, this project needs a comprehensive testsuite.
 
 After 1.0, we might tackle additional connection mechanisms, perhaps
 
-- Bluetooth 3.x (rfcomm)?
-- Implement BLE on Linux (e.g., using [PureSwift](https://github.com/PureSwift/Bluetooth)?
+- Implement RFCOMM & BLE on Linux (e.g., using [PureSwift](https://github.com/PureSwift/Bluetooth)?
 - SSL sockets?
 
 ### Contributions

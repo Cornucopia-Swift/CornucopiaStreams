@@ -1,7 +1,7 @@
 //
 //  Cornucopia – (C) Dr. Lauer Information Technology
 //
-import CornucopiaCore
+@_exported import CornucopiaCore
 import Foundation
 
 public extension Cornucopia {
