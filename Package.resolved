@@ -28,6 +28,24 @@
       }
     },
     {
+      "identity" : "linenoise-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/andybest/linenoise-swift",
+      "state" : {
+        "branch" : "master",
+        "revision" : "cbf0a35c6e159e4fe6a03f76c8a17ef08e907b0e"
+      }
+    },
+    {
+      "identity" : "nimble",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Quick/Nimble.git",
+      "state" : {
+        "revision" : "7a46a5fc86cb917f69e3daf79fcb045283d8f008",
+        "version" : "8.1.2"
+      }
+    },
+    {
       "identity" : "swcompression",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/tsolomko/SWCompression",

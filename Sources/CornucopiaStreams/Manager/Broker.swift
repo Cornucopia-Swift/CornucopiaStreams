@@ -37,6 +37,8 @@ public extension Cornucopia.Streams {
                     connector = TTYConnector(url: url)
                 case "tcp":
                     connector = TCPConnector(url: url)
+                case "rfcomm":
+                    connector = RFCOMMConnector(url: url)
 
                 default:
                     throw Error.unsupportedScheme(scheme)
