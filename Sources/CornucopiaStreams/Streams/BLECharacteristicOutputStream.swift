@@ -45,16 +45,16 @@ public class BLECharacteristicOutputStream: OutputStream {
         guard self.status == .open else { return -1 }
         guard let peripheral = self.characteristic.service?.peripheral else { return -1 }
         guard self.pendingData == nil else { return -1 }
-        // So here's the deal with our preference to .withoutResponse:
-        // While iOS correctly reports the "native" MTU when questing the
+        // So here's the deal with our preference on .withoutResponse:
+        // While iOS correctly reports the "native" MTU when requesting the
         // `peripheral.maximumWriteValueLength(for: .withoutResponse)`,
         // it unconditionally(!) returns 512 as the MTU for
         // `peripheral.maximumWriteValueLength(for: .withResponse)`, which is
         // the maximum allowed MTU as per the spec. However, for this to work
         // the device needs to support Queued Writes (see BLE5.0 | Vol 3, Part F,  Section 3.4.6),
-        // which not all BLE 5 devices do (Yes I'm looking at you OBDLink CX).
+        // which not all BLE 5 devices do (Yes I'm looking at you, OBDLink CX).
         // If you try to use this MTU on a device that does not supported Queued Writes, you
-        // will encounter bytes being dropped and transfers stalling.
+        // will silently encounter bytes being dropped and transfers stalling.
         let writeType: CBCharacteristicWriteType = self.characteristic.properties.contains(.writeWithoutResponse) ? .withoutResponse : .withResponse
         if writeType == .withResponse && !didOutputWriteTypeWarning {
             logger.info("Using BLE write type .withResponse (not recommended)")
