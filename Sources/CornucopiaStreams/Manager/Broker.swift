@@ -37,9 +37,10 @@ public extension Cornucopia.Streams {
                     connector = TTYConnector(url: url)
                 case "tcp":
                     connector = TCPConnector(url: url)
+#if canImport(IOBluetooth)
                 case "rfcomm":
                     connector = RFCOMMConnector(url: url)
-
+#endif
                 default:
                     throw Error.unsupportedScheme(scheme)
             }
