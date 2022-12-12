@@ -18,7 +18,7 @@ This library is a stream-based transport broker. It provides a convenient and ex
 While `Foundation` comes with `getStreamsToHost(withName:port:inputStream:outputStream:)`,
 (which is clumsy to use and limited to TCP) on Apple's operating systems ­– for other platforms, [swift-corelibs-foundation](https://github.com/apple/swift-corelibs-foundation)
 is missing the whole infrastructure for network transfer.
-`CornucopiaTransport` retrofits that and adds the necessary glue code to also support communicating with TTYs, external accessories
+`CornucopiaStreams` retrofits that and adds the necessary glue code to also support communicating with TTYs, external accessories
 (using the `ExternalAccessory` framework), Bluetooth Low Energy (BLE) devices (using the `CoreBluetooth` framework), and Bluetooth Classic devices (using the `IOBluetooth` framework).
 
 On non-Apple-platforms there is no support for BLE, EA, and RFCOMM, since all of those are using Apple's closed-source frameworks.
