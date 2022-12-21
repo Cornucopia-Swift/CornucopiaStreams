@@ -22,9 +22,9 @@ class TTYInputStreamProxy: ProxyInputStream {
         let fd = Foundation.open(self.path, O_RDWR | O_NONBLOCK)
         guard fd >= 0 else {
 #if DEBUG
-            //FIXME: Should we just continue here or inject a stream error?
             print("Can't open \(self.path): \(String(cString: strerror(errno)))")
 #endif
+            self.reportDelegateEvent(.errorOccurred)
             return
         }
         // macOS resets the baudrate when the filedescriptor closes, hence we need to carry it around until the connection ends.

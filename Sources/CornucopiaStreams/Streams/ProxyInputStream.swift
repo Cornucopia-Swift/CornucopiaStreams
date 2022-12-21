@@ -37,3 +37,14 @@ class ProxyInputStream: InputStream {
     override func schedule(in aRunLoop: RunLoop, forMode mode: RunLoop.Mode) { self.stream.schedule(in: aRunLoop, forMode: mode) }
     override func remove(from aRunLoop: RunLoop, forMode mode: RunLoop.Mode) { self.stream.remove(from: aRunLoop, forMode: mode) }
 }
+
+extension ProxyInputStream {
+
+    func reportDelegateEvent(_ event: Stream.Event) {
+#if os(Linux)
+        self.delegate?.stream(self, handle: event)
+#else
+        self.delegate?.stream?(self, handle: event)
+#endif
+    }
+}
