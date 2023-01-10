@@ -2,7 +2,7 @@
 //  Cornucopia – (C) Dr. Lauer Information Technology
 //
 import CornucopiaCore
-#if canImport(IOBluetooth)
+#if canImport(IOBluetooth) && !targetEnvironment(macCatalyst)
 import IOBluetooth
 
 fileprivate let logger = Cornucopia.Core.Logger()

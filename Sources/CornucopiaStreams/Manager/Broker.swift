@@ -37,7 +37,7 @@ public extension Cornucopia.Streams {
                     connector = TTYConnector(url: url)
                 case "tcp":
                     connector = TCPConnector(url: url)
-#if canImport(IOBluetooth)
+#if canImport(IOBluetooth) && !targetEnvironment(macCatalyst)
                 case "rfcomm":
                     connector = RFCOMMConnector(url: url)
 #endif

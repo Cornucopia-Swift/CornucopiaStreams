@@ -1,7 +1,7 @@
 //
 //  Cornucopia – (C) Dr. Lauer Information Technology
 //
-#if canImport(IOBluetooth)
+#if canImport(IOBluetooth) && !targetEnvironment(macCatalyst)
 import CornucopiaCore
 import IOBluetooth
 import Foundation

@@ -6,10 +6,11 @@ import PackageDescription
 let package = Package(
     name: "CornucopiaStreams",
     platforms: [
-        .macOS("12"),
-        .iOS("15"),
-        .tvOS("15"),
-        .watchOS("8"),
+        .macOS(.v12),
+        .macCatalyst(.v15),
+        .iOS(.v15),
+        .tvOS(.v15),
+        .watchOS(.v8),
         // Linux
     ],
     products: [

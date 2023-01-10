@@ -1,7 +1,7 @@
 //
 //  Cornucopia – (C) Dr. Lauer Information Technology
 //
-#if canImport(IOBluetooth)
+#if canImport(IOBluetooth) && !targetEnvironment(macCatalyst)
 import IOBluetooth
 
 public class RFCOMMChannelInputStream: InputStream {
