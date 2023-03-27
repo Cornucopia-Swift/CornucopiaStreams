@@ -54,6 +54,7 @@ extension Cornucopia.Streams {
             }
             return try await withCheckedThrowingContinuation { c in
                 self.continuation = c
+                //FIXME: This is using the main thread's queue to schedule the delegate calls on. Should we offload this to another global queue?
                 self.manager = CBCentralManager()
                 self.manager.delegate = self
             }

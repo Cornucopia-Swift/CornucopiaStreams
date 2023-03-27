@@ -6,7 +6,7 @@ import CoreBluetooth
 
 public class BLECharacteristicInputStream: InputStream {
 
-    fileprivate var incoming = Data()
+    fileprivate var incoming: [UInt8] = []
     public let characteristic: CBCharacteristic
     public let bridge: BLEBridge
 
@@ -47,12 +47,21 @@ public class BLECharacteristicInputStream: InputStream {
 
     public override func read(_ buffer: UnsafeMutablePointer<UInt8>, maxLength len: Int) -> Int {
         guard self.status == .open else { return -1 }
-
         let numberOfBytesToRead = min(self.incoming.count, len)
+        guard numberOfBytesToRead > 0 else { return 0 }
+
+        _ = self.incoming.withUnsafeBufferPointer { pointer in
+            memcpy(buffer, pointer.baseAddress, numberOfBytesToRead)
+        }
+        self.incoming.removeFirst(numberOfBytesToRead)
+
+        /*
         let range = 0..<numberOfBytesToRead
         self.incoming.copyBytes(to: buffer, from: range)
-        self.incoming = self.incoming.subdata(in: numberOfBytesToRead..<self.incoming.count)
+        _ = self.incoming.dropFirst(numberOfBytesToRead)
+        //self.incoming = self.incoming.subdata(in: numberOfBytesToRead..<self.incoming.count)
         //self.incoming.removeFirst(numberOfBytesToRead) EXC_BREAKPOINT?
+        */
         return numberOfBytesToRead
     }
 
@@ -96,9 +105,18 @@ internal extension BLECharacteristicInputStream {
             self.reportDelegateEvent(.errorOccurred)
             return
         }
-        guard let data = self.characteristic.value else { return }
-        self.incoming.append(data)
-        self.reportDelegateEvent(.hasBytesAvailable)
+
+        let block = {
+            guard let data = self.characteristic.value else { return }
+            self.incoming += data
+            self.reportDelegateEvent(.hasBytesAvailable)
+        }
+        // If the client did not schedule a ``RunLoop``, we just call it on the current calling context.
+        guard let runloop = self.runLoop else {
+            block()
+            return
+        }
+        runloop.perform(block)
     }
 
     func bleDisconnected() {
