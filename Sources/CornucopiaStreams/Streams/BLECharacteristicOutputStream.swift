@@ -7,7 +7,11 @@ import CoreBluetooth
 
 fileprivate let logger = Cornucopia.Core.Logger()
 
-/// An `OutputStream` bridging to a BLE characteristic.
+/// An `OutputStream` for a BLE characteristic.
+/// This stream bridges output from an ``OutputStream`` towards a BLE characteristic.
+/// It also keeps a strong reference to the ``BLEBridge`` (which in turn
+/// holds a strong reference to the ``CBCentralManager``), otherwise
+/// the connection would be teared down.
 public class BLECharacteristicOutputStream: OutputStream {
 
     public let characteristic: CBCharacteristic

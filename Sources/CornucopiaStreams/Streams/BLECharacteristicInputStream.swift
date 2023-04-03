@@ -4,6 +4,11 @@
 #if canImport(CoreBluetooth)
 import CoreBluetooth
 
+/// An``InputStream`` bridge for a BLE characteristic.
+/// This stream bridges input via a BLE characteristic to an ``InputStream``.
+/// It also keeps a strong reference to the ``BLEBridge`` (which in turn
+/// holds a strong reference to the ``CBCentralManager``), otherwise
+/// the connection would be teared down.
 public class BLECharacteristicInputStream: InputStream {
 
     fileprivate var incoming: [UInt8] = []
