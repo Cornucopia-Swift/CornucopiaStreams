@@ -166,7 +166,7 @@ extension Cornucopia.Streams.BLEConnector: CBPeripheralDelegate {
             logger.debug("Ignoring successful L2CAP channel open without continuation")
             return
         }
-        guard let inputStream = channel.inputStream else {
+        guard let inputStream = BLEL2CAPInputStreamProxy(manager: self.manager, peripheral: peripheral, channel: channel) else {
             continuation.resume(throwing: Cornucopia.Streams.Error.unableToConnect("L2CAP Channel opened, but input stream is nil"))
             self.continuation = nil
             return
