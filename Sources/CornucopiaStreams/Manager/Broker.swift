@@ -48,11 +48,11 @@ public extension Cornucopia.Streams {
             defer {
                 self.pending[url] = nil
             }
-            return try await withTaskCancellationHandler {
-                connector.cancel()
-            } operation: {
+            return try await withTaskCancellationHandler(operation: {
                 try await connector.connect()
-            }
+            }, onCancel: {
+                connector.cancel()
+            })
         }
     }
 }

@@ -4,6 +4,7 @@
 #if canImport(ExternalAccessory)
 import ExternalAccessory
 
+/// An InputStream that keeps an ``EAsession`` alive.
 final class EAInputStreamProxy: ProxyInputStream {
 
     let session: EASession
