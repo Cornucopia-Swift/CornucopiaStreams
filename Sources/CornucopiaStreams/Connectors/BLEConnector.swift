@@ -12,7 +12,7 @@ fileprivate let logger = Cornucopia.Core.Logger()
 extension Cornucopia.Streams {
 
     /// A connector for Bluetooth Low Energy devices.
-    class BLEConnector: BaseConnector {
+    final class BLEConnector: BaseConnector {
 
         static let forbiddenCharsetCBUUID4 = CharacterSet(charactersIn: "0123456789ABCDEF").inverted
         static let forbiddenCharsetCBUUID6 = CharacterSet(charactersIn: "0123456789ABCDEF-").inverted

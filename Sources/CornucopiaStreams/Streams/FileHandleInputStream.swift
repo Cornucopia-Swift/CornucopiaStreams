@@ -12,7 +12,7 @@ public let posix_read  = Glibc.read
 #endif
 
 /// An InputStream that deals with the FileHandle abstraction.
-class FileHandleInputStream: InputStream {
+final class FileHandleInputStream: InputStream {
 
     private let fileHandle: FileHandle
     private weak var runLoop: RunLoop?

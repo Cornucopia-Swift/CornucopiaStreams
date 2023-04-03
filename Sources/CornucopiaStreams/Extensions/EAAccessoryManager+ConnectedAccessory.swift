@@ -4,7 +4,7 @@
 #if canImport(ExternalAccessory)
 import ExternalAccessory.EAAccessoryManager
 
-public enum AccessoryError: Error {
+@frozen public enum AccessoryError: Error {
     /// UISupportedExternalAccessoryProtocols in plist not found or empty.
     case protocolNotInPlist
 }

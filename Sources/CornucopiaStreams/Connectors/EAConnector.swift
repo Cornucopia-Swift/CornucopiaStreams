@@ -12,7 +12,7 @@ fileprivate let logger = Cornucopia.Core.Logger()
 extension Cornucopia.Streams {
 
     /// A connector for MFi-program compliant devices external accessories.
-    class EAConnector: BaseConnector {
+    final class EAConnector: BaseConnector {
 
         private static var didStartListeningForNotifications: Bool = false
 

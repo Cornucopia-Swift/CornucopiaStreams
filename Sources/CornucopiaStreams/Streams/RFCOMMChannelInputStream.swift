@@ -5,7 +5,7 @@
 import IOBluetooth
 
 /// An ``InputStream`` that gets its data via Bluetooth RFCOMM.
-public class RFCOMMChannelInputStream: InputStream {
+final class RFCOMMChannelInputStream: InputStream {
 
     fileprivate var incoming = Data()
     public let bridge: RFCOMMBridge

@@ -7,7 +7,7 @@ import Foundation
 extension Cornucopia.Streams {
 
     /// A connector for TCP.
-    class TCPConnector: BaseConnector {
+    final class TCPConnector: BaseConnector {
 
         override func connect() async throws -> Cornucopia.Streams.StreamPair {
 

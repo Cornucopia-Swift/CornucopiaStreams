@@ -4,7 +4,7 @@
 import Foundation
 
 /// An InputStream that configures the device's bitrate after open(2).
-class TTYInputStreamProxy: ProxyInputStream {
+final class TTYInputStreamProxy: ProxyInputStream {
 
     private let path: String
     private let bitrate: Int?

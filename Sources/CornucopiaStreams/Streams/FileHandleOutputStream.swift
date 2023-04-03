@@ -4,7 +4,7 @@
 import Foundation
 
 /// An OutputStream that deals with the FileHandle abstraction.
-class FileHandleOutputStream: OutputStream {
+final class FileHandleOutputStream: OutputStream {
 
     private let fileHandle: FileHandle
 

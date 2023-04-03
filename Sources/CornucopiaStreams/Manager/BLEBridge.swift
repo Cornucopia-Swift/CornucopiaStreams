@@ -8,7 +8,7 @@ import CoreBluetooth
 fileprivate let logger = Cornucopia.Core.Logger()
 
 /// Managing the input/output stream pair for a ``CBPeripheral``.
-public class BLEBridge: NSObject {
+public final class BLEBridge: NSObject {
 
     let service: CBService?
     let channel: CBL2CAPChannel? = nil

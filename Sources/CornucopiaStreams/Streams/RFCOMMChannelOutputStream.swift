@@ -8,7 +8,7 @@ import IOBluetooth
 fileprivate let logger = Cornucopia.Core.Logger()
 
 /// An ``OutputStream`` that writes its data to an RFCOMM channel.
-public class RFCOMMChannelOutputStream: OutputStream {
+final class RFCOMMChannelOutputStream: OutputStream {
 
     public let bridge: RFCOMMBridge
 

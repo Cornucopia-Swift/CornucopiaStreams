@@ -8,7 +8,7 @@ import IOBluetooth
 fileprivate let logger = Cornucopia.Core.Logger()
 
 /// Managing the input/output stream pair for a `IOBluetoothDevice`.
-public class RFCOMMBridge: NSObject {
+public final class RFCOMMBridge: NSObject {
 
     public let device: IOBluetoothDevice
     let channelID: BluetoothRFCOMMChannelID

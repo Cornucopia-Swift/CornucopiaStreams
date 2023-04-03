@@ -11,7 +11,7 @@ fileprivate let logger = Cornucopia.Core.Logger()
 extension Cornucopia.Streams {
 
     /// A connector for MFi-program compliant devices external accessories.
-    class RFCOMMConnector: BaseConnector {
+    final class RFCOMMConnector: BaseConnector {
 
         static let forbiddenCharsetAddress = CharacterSet(charactersIn: "0123456789ABCDEF-:").inverted
         static let numberOfCharactersForAddress = 17

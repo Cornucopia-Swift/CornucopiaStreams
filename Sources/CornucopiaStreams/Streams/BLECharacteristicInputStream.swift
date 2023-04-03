@@ -9,7 +9,7 @@ import CoreBluetooth
 /// It also keeps a strong reference to the ``BLEBridge`` (which in turn
 /// holds a strong reference to the ``CBCentralManager``), otherwise
 /// the connection would be teared down.
-public class BLECharacteristicInputStream: InputStream {
+final class BLECharacteristicInputStream: InputStream {
 
     fileprivate var incoming: [UInt8] = []
     public let characteristic: CBCharacteristic

@@ -4,7 +4,7 @@
 #if canImport(ExternalAccessory)
 import ExternalAccessory
 
-class EAInputStreamProxy: ProxyInputStream {
+final class EAInputStreamProxy: ProxyInputStream {
 
     let session: EASession
 

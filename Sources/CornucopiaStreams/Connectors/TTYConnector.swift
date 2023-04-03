@@ -7,7 +7,7 @@ import Foundation
 extension Cornucopia.Streams {
 
     /// A connector for (pseudo)-TTYs and (USB) serial ports.
-    class TTYConnector: BaseConnector {
+    final class TTYConnector: BaseConnector {
 
         override func connect() async throws -> Cornucopia.Streams.StreamPair {
 

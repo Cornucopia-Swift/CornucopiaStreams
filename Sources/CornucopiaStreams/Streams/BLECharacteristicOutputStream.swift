@@ -12,7 +12,7 @@ fileprivate let logger = Cornucopia.Core.Logger()
 /// It also keeps a strong reference to the ``BLEBridge`` (which in turn
 /// holds a strong reference to the ``CBCentralManager``), otherwise
 /// the connection would be teared down.
-public class BLECharacteristicOutputStream: OutputStream {
+final class BLECharacteristicOutputStream: OutputStream {
 
     public let characteristic: CBCharacteristic
     public let bridge: BLEBridge

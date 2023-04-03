@@ -7,7 +7,7 @@ import CoreBluetooth
 /// This is a ``ProxyInputStream`` for a BLE L2CAP connection.
 /// Its solely purpose is to keep the connection alive by holding
 /// references to the ``CBCentralManager``, the ``CBPeripheral``, and the ``CBL2CAPChannel``.
-class BLEL2CAPInputStreamProxy: ProxyInputStream {
+final class BLEL2CAPInputStreamProxy: ProxyInputStream {
 
     let manager: CBCentralManager
     let peripheral: CBPeripheral

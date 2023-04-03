@@ -6,13 +6,13 @@ import Foundation
 
 public extension Cornucopia {
 
-    enum Streams {
+    @frozen enum Streams {
 
         /// A bundle of an ``InputStream`` and an ``OutputStream``.
         public typealias StreamPair = (input: InputStream, output: OutputStream)
 
         /// Possible high level errors. Some connectors might throw additional errors.
-        public enum Error: Swift.Error {
+        @frozen public enum Error: Swift.Error {
             /// Not implemented
             case notImplemented
             /// URL is invalid or lacking parameters.
