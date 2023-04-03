@@ -22,9 +22,10 @@ is missing the whole infrastructure for network transfer.
 (using the `ExternalAccessory` framework), Bluetooth Low Energy (BLE) devices (using the `CoreBluetooth` framework), and Bluetooth Classic devices (using the `IOBluetooth` framework).
 
 On non-Apple-platforms there is no support for BLE, EA, and RFCOMM, since all of those are using Apple's closed-source frameworks.
-That said, it might be interesting to evaluate [BluetoothLinux](https://github.com/PureSwift/BluetoothLinux).
+Perspectively, it might be interesting to evaluate [BluetoothLinux](https://github.com/PureSwift/BluetoothLinux).
 
-With the exception of BLE (where we have to do the actual bridging), the major purpose of this library is to aid setting up the stream connections. Once the connection phase is over, it does not keep track about the further state, hence you can close your streams whenever you like without having to notify `CornucopiaStreams`.
+With the exception of BLE (where we have to do the actual bridging), the major purpose of this library is to aid setting up the stream connections.
+Once the connecting phase is over, it does not keep track about the further state, hence you can close your streams whenever you like without having to notify `CornucopiaStreams`.
 
 ### Usage
 

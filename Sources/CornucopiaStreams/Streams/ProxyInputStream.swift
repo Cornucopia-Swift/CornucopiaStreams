@@ -3,7 +3,7 @@
 //
 import Foundation
 
-/// An InputStream proxy.
+/// An InputStream proxy (base class).
 class ProxyInputStream: InputStream {
 
     private var stream: InputStream
