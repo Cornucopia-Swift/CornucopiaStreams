@@ -24,7 +24,7 @@
       "location" : "https://github.com/Cornucopia-Swift/CornucopiaCore",
       "state" : {
         "branch" : "master",
-        "revision" : "db1b32d350db2def61dabf1279d7901b873ad902"
+        "revision" : "b8110697f6aa674faa1d9647b0ad62e1d465970c"
       }
     },
     {
@@ -50,8 +50,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/tsolomko/SWCompression",
       "state" : {
-        "revision" : "6fe73cb9a0d2e70a80ec892724ac19b683f398e0",
-        "version" : "4.8.3"
+        "revision" : "cd39ca0a3b269173bab06f68b182b72fa690765c",
+        "version" : "4.8.5"
       }
     },
     {

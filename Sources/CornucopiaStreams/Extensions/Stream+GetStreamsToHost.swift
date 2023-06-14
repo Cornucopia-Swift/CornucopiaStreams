@@ -4,7 +4,7 @@
 import Foundation
 import CoreFoundation
 
-/// It's possible to use the low level socket helper unconditionally (instead of Darwin's getStreamsToHost), just
+/// It's possible to use the low level socket helper unconditionally (instead of Darwin's `getStreamsToHost`), just
 /// change this to 'true //' here and below.
 #if canImport(FoundationNetworking)
 import CSocketHelper
@@ -17,7 +17,7 @@ public extension Stream {
 
         var inputStream: InputStream?
         var outputStream: OutputStream?
-        #if canImport(FoundationNetworking)
+#if canImport(FoundationNetworking)
         let fileDescriptor = csocket_connect(name.cString(using: .utf8), Int32(port), 1000)
         if fileDescriptor >= 0 {
             let fih = FileHandle(fileDescriptor: fileDescriptor, closeOnDealloc: true)
@@ -25,9 +25,9 @@ public extension Stream {
             inputStream = FileHandleInputStream(fileHandle: fih)
             outputStream = FileHandleOutputStream(fileHandle: foh)
         }
-        #else
+#elseif !os(watchOS)
         Self.getStreamsToHost(withName: name, port: port, inputStream: &inputStream, outputStream: &outputStream)
-        #endif
+#endif
         return (inputStream, outputStream)
     }
 }

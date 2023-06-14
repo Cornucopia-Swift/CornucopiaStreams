@@ -19,6 +19,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/Cornucopia-Swift/CornucopiaCore", branch: "master"),
+        //.package(path: "../CornucopiaCore"),
         // for the executable
         .package(url: "https://github.com/andybest/linenoise-swift", branch: "master"),
     ],
