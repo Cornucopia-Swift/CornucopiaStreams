@@ -59,9 +59,10 @@ extension Cornucopia.Streams {
                 self.manager.delegate = self
             }
         }
+
 #if DEBUG
         deinit {
-            print("\(self) destroyed")
+            logger.debug("\(self) destroyed")
         }
 #endif
     }
@@ -77,7 +78,8 @@ extension Cornucopia.Streams.BLEConnector: CBCentralManagerDelegate {
         connectedPeripherals.forEach {
             self.centralManager(central, didDiscover: $0, advertisementData: [:], rssi: $0.rssi ?? 0.42)
         }
-        central.scanForPeripherals(withServices: [self.service], options: nil)
+        let options: [String: Any] = [CBCentralManagerScanOptionAllowDuplicatesKey: false]
+        central.scanForPeripherals(withServices: [self.service], options: options)
     }
 
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
