@@ -21,10 +21,11 @@ final class BLEL2CAPInputStreamProxy: ProxyInputStream {
         super.init(proxying: inputStream)
     }
 
-#if DEBUG
     deinit {
+        self.manager.cancelPeripheralConnection(self.peripheral)
+#if DEBUG
         print("\(self) destroyed")
-    }
 #endif
+    }
 }
 #endif
