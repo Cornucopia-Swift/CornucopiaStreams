@@ -27,11 +27,11 @@ public final class BLEBridge: NSObject {
         peripheral.delegate = self
     }
 
-    deinit {
 #if DEBUG
-        print("\(self) destroyed")
-#endif
+    deinit {
+        logger.debug("\(self) destroyed")
     }
+#endif
 }
 
 extension BLEBridge: CBPeripheralDelegate {
