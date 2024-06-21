@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/tsolomko/BitByteData",
       "state" : {
-        "revision" : "36df26fe4586b4f23d76cfd8b47076998343a2b2",
-        "version" : "2.0.3"
+        "revision" : "cdcdc5177ad536cfb11b95c620f926a81014b7fe",
+        "version" : "2.0.4"
       }
     },
     {
@@ -24,7 +24,7 @@
       "location" : "https://github.com/Cornucopia-Swift/CornucopiaCore",
       "state" : {
         "branch" : "master",
-        "revision" : "7f8b0184ad6cd0519b90967e329c42b689586d20"
+        "revision" : "c0346f93f603ff63aa72523094c0397686c71f45"
       }
     },
     {
@@ -50,8 +50,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/tsolomko/SWCompression",
       "state" : {
-        "revision" : "cd39ca0a3b269173bab06f68b182b72fa690765c",
-        "version" : "4.8.5"
+        "revision" : "390e0b0af8dd19a600005a242a89e570ff482e09",
+        "version" : "4.8.6"
       }
     },
     {
@@ -59,8 +59,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-crypto",
       "state" : {
-        "revision" : "33a20e650c33f6d72d822d558333f2085effa3dc",
-        "version" : "2.5.0"
+        "revision" : "bc1c29221f6dfeb0ebbfbc98eb95cd3d4967868e",
+        "version" : "3.4.0"
       }
     }
   ],
