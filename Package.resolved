@@ -1,4 +1,5 @@
 {
+  "originHash" : "3e8b58a52ac40e39626cfccd52a0e16c5b7ae7277adb7adc9a190a6c45c151ab",
   "pins" : [
     {
       "identity" : "anycodable",
@@ -24,7 +25,7 @@
       "location" : "https://github.com/Cornucopia-Swift/CornucopiaCore",
       "state" : {
         "branch" : "master",
-        "revision" : "c0346f93f603ff63aa72523094c0397686c71f45"
+        "revision" : "c4b3ee10c067395fdb9daaa93eaf61c4017323a5"
       }
     },
     {
@@ -59,10 +60,10 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-crypto",
       "state" : {
-        "revision" : "bc1c29221f6dfeb0ebbfbc98eb95cd3d4967868e",
-        "version" : "3.4.0"
+        "revision" : "46072478ca365fe48370993833cb22de9b41567f",
+        "version" : "3.5.2"
       }
     }
   ],
-  "version" : 2
+  "version" : 3
 }
