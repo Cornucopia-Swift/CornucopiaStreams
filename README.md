@@ -141,7 +141,10 @@ Some of the streams provide metadata, e.g., the `name` for BLE devices, which yo
 
 ### Roadmap
 
-Before 1.0, this project needs a comprehensive testsuite.
+Before 1.0:
+
+- Implement comprehensive testsuite
+- Implement cancellation for every connection type
 
 After 1.0, we might tackle additional connection mechanisms, perhaps
 
