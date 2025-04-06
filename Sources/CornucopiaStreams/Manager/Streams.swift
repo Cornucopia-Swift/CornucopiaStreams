@@ -28,6 +28,7 @@ public extension Cornucopia {
         }
 
         /// Connect to the specified ``URL``.
+        /// Task will suspend until the connection is established, fails, or the task is cancelled.
         public static func connect(url: URL) async throws -> StreamPair {
             try await Cornucopia.Streams.Broker.shared.connect(to: url)
         }
