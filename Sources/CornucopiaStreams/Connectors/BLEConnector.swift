@@ -60,6 +60,18 @@ extension Cornucopia.Streams {
             }
         }
 
+        override func cancel() {
+            logger.trace("Connection attempt cancelled, shutting down")
+            self.manager.stopScan()
+            if let peripheral = self.peripheral {
+                self.manager.cancelPeripheralConnection(peripheral)
+            }
+            self.peripherals.removeAll()
+            self.peripheral = nil
+            self.continuation?.resume(throwing: Cornucopia.Streams.Error.connectionCancelled)
+            self.continuation = nil
+        }
+
 #if DEBUG
         deinit {
             logger.debug("\(self) destroyed")
