@@ -1,5 +1,5 @@
 //
-//  Cornucopia – (C) Dr. Lauer Information Technology
+//  Cornucopia – ( C) Dr. Lauer Information Technology
 //
 import Foundation
 
@@ -47,6 +47,8 @@ final class FileHandleOutputStream: OutputStream {
     override var hasSpaceAvailable: Bool { true }
 
     override func write(_ buffer: UnsafePointer<UInt8>, maxLength len: Int) -> Int {
+        // RE-ADDED: Check if stream is open before writing
+        guard self._streamStatus == .open else { return -1 } // Return -1 on error
 
         let data = Data(bytes: buffer, count: len)
         self.fileHandle.write(data)

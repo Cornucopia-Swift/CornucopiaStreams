@@ -68,6 +68,7 @@ final class FileHandleInputStream: InputStream {
         }
         // Must be called from a thread that has an active runloop, see https://developer.apple.com/documentation/foundation/nsfilehandle/1409270-waitfordatainbackgroundandnotify
         self.runLoop?.perform {
+            guard self._streamStatus == .open else { return }
             self.fileHandle.waitForDataInBackgroundAndNotify()
         }
         self._streamStatus = .open
@@ -89,7 +90,6 @@ final class FileHandleInputStream: InputStream {
             return 0
         }
         self._hasBytesAvailable = false
-        self.fileHandle.waitForDataInBackgroundAndNotify()
         return nread
     }
 
