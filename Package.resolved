@@ -1,5 +1,5 @@
 {
-  "originHash" : "3e8b58a52ac40e39626cfccd52a0e16c5b7ae7277adb7adc9a190a6c45c151ab",
+  "originHash" : "796778ff724b8e843ebb817cefd8907092c6994f491789fab738c6a24dca16c5",
   "pins" : [
     {
       "identity" : "anycodable",
@@ -25,7 +25,16 @@
       "location" : "https://github.com/Cornucopia-Swift/CornucopiaCore",
       "state" : {
         "branch" : "master",
-        "revision" : "ba764bf33a75138557ce51657aa88e0303b74d77"
+        "revision" : "d317a81d8c732026a93806c6422105491b96f7d6"
+      }
+    },
+    {
+      "identity" : "foundationbandaid",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/mickeyl/FoundationBandAid",
+      "state" : {
+        "branch" : "master",
+        "revision" : "163e98760ce824d9c880684ec1014228795ef8c3"
       }
     },
     {
@@ -60,8 +69,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-asn1.git",
       "state" : {
-        "revision" : "ae33e5941bb88d88538d0a6b19ca0b01e6c76dcf",
-        "version" : "1.3.1"
+        "revision" : "f70225981241859eb4aa1a18a75531d26637c8cc",
+        "version" : "1.4.0"
       }
     },
     {
@@ -69,8 +78,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-crypto",
       "state" : {
-        "revision" : "45305d32cfb830faebcaa9a7aea66ad342637518",
-        "version" : "3.11.1"
+        "revision" : "334e682869394ee239a57dbe9262bff3cd9495bd",
+        "version" : "3.14.0"
       }
     }
   ],
