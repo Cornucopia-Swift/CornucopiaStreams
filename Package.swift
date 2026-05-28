@@ -1,4 +1,4 @@
-// swift-tools-version: 5.10
+// swift-tools-version: 6.0
 
 import PackageDescription
 
@@ -6,10 +6,10 @@ let package = Package(
     name: "CornucopiaStreams",
     platforms: [
         .macOS(.v13),
-        .macCatalyst(.v16),
-        .iOS(.v16),
-        .tvOS(.v16),
-        .watchOS(.v9),
+        .macCatalyst(.v18),
+        .iOS(.v18),
+        .tvOS(.v18),
+        .watchOS(.v10),
         // Linux
     ],
     products: [
@@ -40,5 +40,6 @@ let package = Package(
         .testTarget(
             name: "CornucopiaStreamsTests",
             dependencies: ["CornucopiaStreams"]),
-    ]
+    ],
+    swiftLanguageModes: [.v5]
 )
