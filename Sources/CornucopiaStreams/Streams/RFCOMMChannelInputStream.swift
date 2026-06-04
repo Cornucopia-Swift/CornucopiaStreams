@@ -83,8 +83,15 @@ internal extension RFCOMMChannelInputStream {
     }
 
     func rfcommChannelIncomingData(_ data: Data) {
-        self.incoming.append(data)
-        self.reportDelegateEvent(.hasBytesAvailable)
+        let block = {
+            self.incoming.append(data)
+            self.reportDelegateEvent(.hasBytesAvailable)
+        }
+        guard let runloop = self.runLoop else {
+            block()
+            return
+        }
+        runloop.perform(block)
     }
 
     func rfcommChannelClosed() {

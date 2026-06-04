@@ -17,6 +17,7 @@ final class FileHandleInputStream: InputStream {
     private let fileHandle: FileHandle
     private weak var runLoop: RunLoop?
     private var dummySource: CFRunLoopSource? = nil
+    private var dataAvailableObserver: NSObjectProtocol? = nil
 
     private var _streamStatus: Stream.Status  = .notOpen {
         didSet {
@@ -59,7 +60,7 @@ final class FileHandleInputStream: InputStream {
         guard self._streamStatus != .open else { return }
 
         //FIXME: This API does not integrate with the runloop system, but is rather a libdispatch.
-        _ = NotificationCenter.default.addObserver(forName: Notification.Name.NSFileHandleDataAvailable, object: self.fileHandle, queue: nil) { notification in
+        self.dataAvailableObserver = NotificationCenter.default.addObserver(forName: Notification.Name.NSFileHandleDataAvailable, object: self.fileHandle, queue: nil) { _ in
             //FIXME: Hence we need to do a little runloop dance here
             self.runLoop?.perform() {
                 self._hasBytesAvailable = true
@@ -94,6 +95,10 @@ final class FileHandleInputStream: InputStream {
     }
 
     override func close() {
+        if let dataAvailableObserver {
+            NotificationCenter.default.removeObserver(dataAvailableObserver)
+            self.dataAvailableObserver = nil
+        }
         try? self.fileHandle.close()
         self._streamStatus = .closed
     }
@@ -112,6 +117,12 @@ final class FileHandleInputStream: InputStream {
         self.runLoop = nil
         aRunLoop.CC_removeSource(self.dummySource!)
         self.dummySource = nil
+    }
+
+    deinit {
+        if let dataAvailableObserver {
+            NotificationCenter.default.removeObserver(dataAvailableObserver)
+        }
     }
 }
 

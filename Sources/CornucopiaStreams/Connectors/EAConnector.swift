@@ -54,6 +54,7 @@ extension Cornucopia.Streams {
                 logger.debug("Ignoring cancellation request without continuation")
                 return
             }
+            self.clearPendingConnection()
             continuation.resume(throwing: Error.connectionCancelled)
         }
 
@@ -68,32 +69,36 @@ extension Cornucopia.Streams {
             }
             guard let connectedAccessory = try? EAAccessoryManager.shared().CC_connectedAccessoryForProtocol(proto) else { return }
             guard let inputStream = EAInputStreamProxy(accessory: connectedAccessory, forProtocol: proto) else {
+                self.clearPendingConnection()
                 continuation.resume(throwing: Error.unableToConnect("Can't create EAInputStream"))
-                self.continuation = nil
-                self.proto = nil
                 return
             }
             guard let outputStream = inputStream.session.outputStream else {
+                self.clearPendingConnection()
                 continuation.resume(throwing: Error.unableToConnect("EASession output stream is nil"))
-                self.continuation = nil
-                self.proto = nil
                 return
             }
             self.installMetaData(for: connectedAccessory, inputStream: inputStream, outputStream: outputStream)
+            self.clearPendingConnection()
             continuation.resume(returning: (inputStream, outputStream))
-            self.continuation = nil
-            self.proto = nil
         }
 
-        #if DEBUG
         deinit {
+            NotificationCenter.default.removeObserver(self, name: Notification.Name.EAAccessoryDidConnect, object: nil)
+#if DEBUG
             print("\(self) destroyed")
+#endif
         }
-        #endif
     }
 }
 
 private extension Cornucopia.Streams.EAConnector {
+
+    func clearPendingConnection() {
+        NotificationCenter.default.removeObserver(self, name: Notification.Name.EAAccessoryDidConnect, object: nil)
+        self.continuation = nil
+        self.proto = nil
+    }
 
     func installMetaData(for accessory: EAAccessory, inputStream: InputStream, outputStream: OutputStream) {
         self.meta.name = accessory.name
