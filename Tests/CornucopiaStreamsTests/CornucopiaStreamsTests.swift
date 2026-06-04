@@ -36,7 +36,11 @@ final class ConnectorCancellationTests: XCTestCase {
     }
     #endif
 
-    func testTTYConnectorCancellation() async throws {
+}
+
+final class TTYConnectorTests: XCTestCase {
+
+    func testTTYConnectorOpensTemporaryStreamPair() async throws {
         let path = FileManager.default.temporaryDirectory
             .appendingPathComponent("cornucopia-streams-tty-\(UUID().uuidString)")
         FileManager.default.createFile(atPath: path.path, contents: Data())
@@ -44,7 +48,42 @@ final class ConnectorCancellationTests: XCTestCase {
 
         let urlString = "tty://\(path.path)"
         let url = try XCTUnwrap(URL(string: urlString))
-        await expectCancellation(for: url, connectorName: "TTYConnector")
+        let pair = try await Cornucopia.Streams.Broker.shared.connect(to: url)
+
+        pair.input.open()
+        pair.output.open()
+        XCTAssertEqual(pair.input.streamStatus, .open)
+        XCTAssertEqual(pair.output.streamStatus, .open)
+
+        pair.input.close()
+        pair.output.close()
+    }
+
+    func testTTYConnectorOpensConfiguredSerialDevice() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard let path = environment["CORNUCOPIA_STREAMS_TEST_TTY_PATH"], !path.isEmpty else {
+            throw XCTSkip("Set CORNUCOPIA_STREAMS_TEST_TTY_PATH to run the hardware TTY integration test")
+        }
+        guard FileManager.default.fileExists(atPath: path) else {
+            throw XCTSkip("Configured TTY device does not exist: \(path)")
+        }
+
+        let urlString: String
+        if let bitrate = environment["CORNUCOPIA_STREAMS_TEST_TTY_BITRATE"], !bitrate.isEmpty {
+            urlString = "tty://localhost:\(bitrate)\(path)"
+        } else {
+            urlString = "tty://\(path)"
+        }
+        let url = try XCTUnwrap(URL(string: urlString))
+        let pair = try await Cornucopia.Streams.Broker.shared.connect(to: url)
+
+        pair.input.open()
+        pair.output.open()
+        XCTAssertEqual(pair.input.streamStatus, .open)
+        XCTAssertEqual(pair.output.streamStatus, .open)
+
+        pair.input.close()
+        pair.output.close()
     }
 }
 

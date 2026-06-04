@@ -18,7 +18,10 @@ final class TTYInputStreamProxy: ProxyInputStream {
     }
 
     override func open() {
-        guard let bitrate = self.bitrate else { return }
+        guard let bitrate = self.bitrate else {
+            super.open()
+            return
+        }
         let fd = Foundation.open(self.path, O_RDWR | O_NONBLOCK)
         guard fd >= 0 else {
 #if DEBUG
