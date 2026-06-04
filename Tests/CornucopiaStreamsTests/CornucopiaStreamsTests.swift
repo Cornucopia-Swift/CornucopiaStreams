@@ -6,7 +6,7 @@ final class ConnectorCancellationTests: XCTestCase {
 
     func testTCPConnectorCancellation() async throws {
         let url = try XCTUnwrap(URL(string: "tcp://192.0.2.1:65000"))
-        await expectCancellation(
+        try await expectCancellation(
             for: url,
             connectorName: "TCPConnector",
             warmupNanoseconds: 4_000_000_000,
@@ -17,7 +17,10 @@ final class ConnectorCancellationTests: XCTestCase {
     #if canImport(ExternalAccessory)
     func testEAConnectorCancellation() async throws {
         let url = try XCTUnwrap(URL(string: "ea://com.example.protocol"))
-        await expectCancellation(for: url, connectorName: "EAConnector")
+        try await expectCancellation(for: url, connectorName: "EAConnector") { error in
+            guard case AccessoryError.protocolNotInPlist = error else { return nil }
+            return "Test bundle has no UISupportedExternalAccessoryProtocols entry"
+        }
     }
     #endif
 
@@ -25,14 +28,17 @@ final class ConnectorCancellationTests: XCTestCase {
     @MainActor
     func testBLEConnectorCancellation() async throws {
         let url = try XCTUnwrap(URL(string: "ble://DEAD"))
-        await expectCancellation(for: url, connectorName: "BLEConnector", warmupNanoseconds: 200_000_000, timeoutNanoseconds: 2_000_000_000)
+        try await expectCancellation(for: url, connectorName: "BLEConnector", warmupNanoseconds: 200_000_000, timeoutNanoseconds: 2_000_000_000)
     }
     #endif
 
     #if canImport(IOBluetooth) && !targetEnvironment(macCatalyst)
     func testRFCOMMConnectorCancellation() async throws {
         let url = try XCTUnwrap(URL(string: "rfcomm://00-11-22-33-44-55:1"))
-        await expectCancellation(for: url, connectorName: "RFCOMMConnector")
+        try await expectCancellation(for: url, connectorName: "RFCOMMConnector") { error in
+            guard let streamsError = error as? Cornucopia.Streams.Error, case .unableToConnect = streamsError else { return nil }
+            return "Bluetooth environment rejected the connection before cancellation could take effect"
+        }
     }
     #endif
 
@@ -102,8 +108,9 @@ private func expectCancellation(
     warmupNanoseconds: UInt64 = 50_000_000,
     timeoutNanoseconds: UInt64 = 200_000_000,
     file: StaticString = #filePath,
-    line: UInt = #line
-) async {
+    line: UInt = #line,
+    environmentSkipReason: (Error) -> String? = { _ in nil }
+) async throws {
 
     let broker = Cornucopia.Streams.Broker.shared
     let task = Task {
@@ -125,6 +132,11 @@ private func expectCancellation(
             XCTFail("\(connectorName) connection unexpectedly succeeded (cancellation had no effect)", file: file, line: line)
 
         case .failed(let error):
+            // Some connectors fail fast on machines lacking the required hardware or entitlements;
+            // there is nothing to cancel then, so we skip rather than report a bogus failure.
+            if let reason = environmentSkipReason(error) {
+                throw XCTSkip("\(connectorName): \(reason)", file: file, line: line)
+            }
             if let streamsError = error as? Cornucopia.Streams.Error {
                 if case .connectionCancelled = streamsError {
                     // Expected outcome; the connector reported proper cancellation.

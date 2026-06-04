@@ -8,6 +8,7 @@ public let posix_read = Darwin.read
 #else
 import CoreFoundation
 import Glibc
+import FoundationBandAid
 public let posix_read  = Glibc.read
 #endif
 
@@ -65,14 +66,14 @@ final class FileHandleInputStream: InputStream {
             self.runLoop?.perform() {
                 self._hasBytesAvailable = true
             }
-            CFRunLoopWakeUp(self.runLoop?.getCFRunLoop())
+            self.wakeUpRunLoop()
         }
         // Must be called from a thread that has an active runloop, see https://developer.apple.com/documentation/foundation/nsfilehandle/1409270-waitfordatainbackgroundandnotify
         self.runLoop?.perform {
             self.fileHandle.waitForDataInBackgroundAndNotify()
         }
         self._streamStatus = .open
-        CFRunLoopWakeUp(self.runLoop?.getCFRunLoop())
+        self.wakeUpRunLoop()
     }
 
     override var hasBytesAvailable: Bool { self._hasBytesAvailable }
@@ -127,6 +128,16 @@ final class FileHandleInputStream: InputStream {
 }
 
 private extension FileHandleInputStream {
+
+    func wakeUpRunLoop() {
+        guard let runLoop = self.runLoop else { return }
+        // swift-corelibs-foundation 6.x no longer exposes `getCFRunLoop()`, hence we go through FoundationBandAid there.
+        #if canImport(ObjectiveC)
+        CFRunLoopWakeUp(runLoop.getCFRunLoop())
+        #else
+        CFRunLoopWakeUp(runLoop.CC_cfRunLoop)
+        #endif
+    }
 
     func reportDelegateEvent(_ event: Stream.Event) {
         #if os(Linux)

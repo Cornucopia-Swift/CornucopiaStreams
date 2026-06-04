@@ -18,6 +18,7 @@ let package = Package(
     dependencies: [
         // for the library
         .package(url: "https://github.com/Cornucopia-Swift/CornucopiaCore", branch: "master"),
+        .package(url: "https://github.com/mickeyl/FoundationBandAid", branch: "master"),
         // for the executable
         .package(url: "https://github.com/andybest/linenoise-swift", branch: "master"),
     ],
@@ -28,6 +29,7 @@ let package = Package(
             dependencies: [
                 "CSocketHelper",
                 "CornucopiaCore",
+                .product(name: "FoundationBandAid", package: "FoundationBandAid", condition: .when(platforms: [.linux])),
             ]
         ),
         .executableTarget(
