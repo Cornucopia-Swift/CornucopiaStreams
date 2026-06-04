@@ -67,12 +67,13 @@ extension BLEBridge: CBPeripheralDelegate {
             logger.debug("Ignoring didUpdateValueFor for unexpected or released input stream")
             return
         }
-        defer { inputStream.bleReadCompleted(error: error) }
+        let data = characteristic.value
+        defer { inputStream.bleReadCompleted(data: data, error: error) }
         guard error == nil else {
             logger.debug("Could not updateValueForCharacteristic: \(error!)")
             return
         }
-        logger.trace("didUpdateValueForCharacteristic: \(characteristic)")
+        logger.trace("didUpdateValueForCharacteristic: \(characteristic), \(data?.count ?? 0) bytes")
     }
 
     public func peripheralIsReady(toSendWriteWithoutResponse peripheral: CBPeripheral) {

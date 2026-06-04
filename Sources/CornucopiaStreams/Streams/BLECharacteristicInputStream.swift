@@ -105,14 +105,14 @@ internal extension BLECharacteristicInputStream {
         //self.characteristic.service.peripheral.readValue(for: self.characteristic)
     }
 
-    func bleReadCompleted(error: Error?) {
+    func bleReadCompleted(data: Data?, error: Error?) {
         guard error == nil else {
             self.reportDelegateEvent(.errorOccurred)
             return
         }
 
         let block = {
-            guard let data = self.characteristic.value else { return }
+            guard let data else { return }
             self.incoming += data
             self.reportDelegateEvent(.hasBytesAvailable)
         }
