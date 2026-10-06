@@ -25,6 +25,7 @@ extension Cornucopia.Streams {
         var peer: UUID? = nil
         var psm: CBL2CAPPSM? = nil
 
+        private var cancelled = false
         var manager: CBCentralManager!
         var peripherals: [UUID: CBPeripheral] = [:]
         var peripheral: CBPeripheral? = nil
@@ -54,23 +55,43 @@ extension Cornucopia.Streams {
                 self.psm = CBL2CAPPSM(port)
             }
             return try await withCheckedThrowingContinuation { c in
-                self.continuation = c
-                //FIXME: This is using the main thread's queue to schedule the delegate calls on. Should we offload this to another global queue?
-                self.manager = CBCentralManager()
-                self.manager.delegate = self
+                // Delegate callbacks and cancellation share the main queue, including setup.
+                DispatchQueue.main.async {
+                    guard !self.cancelled else {
+                        c.resume(throwing: Cornucopia.Streams.Error.connectionCancelled)
+                        return
+                    }
+                    self.continuation = c
+                    self.manager = CBCentralManager(delegate: self, queue: .main)
+                }
             }
         }
 
         override func cancel() {
+            if Thread.isMainThread { cancelOnMainQueue() }
+            else { DispatchQueue.main.async { self.cancelOnMainQueue() } }
+        }
+
+        private func cancelOnMainQueue() {
+            guard !cancelled else { return }
+            cancelled = true
             logger.trace("Connection attempt cancelled, shutting down")
-            self.manager.stopScan()
+            // Cancellation may precede connect(), including for an already-cancelled task.
+            self.manager?.stopScan()
+            self.manager?.delegate = nil
+            for peripheral in self.peripherals.values {
+                peripheral.delegate = nil
+                self.manager?.cancelPeripheralConnection(peripheral)
+            }
             if let peripheral = self.peripheral {
-                self.manager.cancelPeripheralConnection(peripheral)
+                peripheral.delegate = nil
+                self.manager?.cancelPeripheralConnection(peripheral)
             }
             self.peripherals.removeAll()
             self.peripheral = nil
-            self.continuation?.resume(throwing: Cornucopia.Streams.Error.connectionCancelled)
+            let pending = self.continuation
             self.continuation = nil
+            pending?.resume(throwing: Cornucopia.Streams.Error.connectionCancelled)
         }
 
 #if DEBUG
@@ -84,6 +105,7 @@ extension Cornucopia.Streams {
 extension Cornucopia.Streams.BLEConnector: CBCentralManagerDelegate {
 
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        guard continuation != nil else { return }
         logger.trace("CBCentralManager state now \(central.state)")
         guard case .poweredOn = central.state else { return }
 
@@ -96,12 +118,14 @@ extension Cornucopia.Streams.BLEConnector: CBCentralManagerDelegate {
     }
 
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
+        guard continuation != nil else { return }
         logger.trace("CBCentralManager did discover \(peripheral)")
         self.peripherals[peripheral.identifier] = peripheral
         central.connect(peripheral, options: nil)
     }
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+        guard continuation != nil else { return }
         logger.trace("CBCentralManager did connect \(peripheral)")
         if let peer = self.peer, peripheral.identifier != peer { return }
         peripheral.delegate = self
@@ -120,6 +144,7 @@ extension Cornucopia.Streams.BLEConnector: CBCentralManagerDelegate {
 extension Cornucopia.Streams.BLEConnector: CBPeripheralDelegate {
 
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
+        guard continuation != nil else { return }
         guard error == nil else {
             self.peripherals.removeValue(forKey: peripheral.identifier)
             return
@@ -135,6 +160,7 @@ extension Cornucopia.Streams.BLEConnector: CBPeripheralDelegate {
     }
 
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
+        guard continuation != nil else { return }
         guard error == nil else {
             self.peripherals.removeValue(forKey: peripheral.identifier)
             return
